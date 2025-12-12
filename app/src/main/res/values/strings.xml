@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">SCSAattend</string>
+    <string name="login_title">SCSA 출결 관리</string>
+    <string name="id_hint">아이디를 입력하세요</string>
+    <string name="password_hint">비밀번호를 입력하세요</string>
+    <string name="login_button">로그인</string>
+    <string name="navigation_drawer_open">네비게이션 드로어 열기</string>
+    <string name="navigation_drawer_close">네비게이션 드로어 닫기</string>
 </resources>
