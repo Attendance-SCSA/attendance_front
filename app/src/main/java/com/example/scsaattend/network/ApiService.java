@@ -1,13 +1,25 @@
 package com.example.scsaattend.network;
 
-import com.example.scsaattend.network.dto.LoginRequest;
-import com.example.scsaattend.network.dto.LoginResponse;
+import android.util.Log;
+
+import com.example.scsaattend.dto.AttendanceRequest;
+import com.example.scsaattend.dto.AttendanceResponse;
+import com.example.scsaattend.dto.CheckInResponse;
+import com.example.scsaattend.dto.LoginRequest;
+import com.example.scsaattend.dto.LoginResponse;
+import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
 
 public interface ApiService {
-    // URL 경로 수정: BaseUrl이 '/'로 끝나게 설정할 것이므로 여기서는 '/'를 뺍니다.
     @POST("auth/login")
     Call<LoginResponse> login(@Body LoginRequest request);
+
+    @POST("attendances_info/search")
+    Call<List<AttendanceResponse>> getAttendance(@Body AttendanceRequest request);
+
+    @POST("attendances_info/{aInfoId}/arrival")
+    Call<CheckInResponse> checkIn(@Path("aInfoId") int aInfoId, @Body Object emptyBody);
 }

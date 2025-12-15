@@ -1,4 +1,4 @@
-package com.example.scsaattend.network.dto;
+package com.example.scsaattend.dto;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -29,6 +29,10 @@ public class LoginResponse {
 
     public String getRole() {
         return role;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public String getLoginId() {
