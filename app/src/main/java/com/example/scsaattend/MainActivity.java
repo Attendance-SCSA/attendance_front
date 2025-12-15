@@ -15,6 +15,7 @@ import androidx.core.view.GravityCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import com.example.scsaattend.user.TodayAttendanceFragment;
 import com.google.android.material.navigation.NavigationView;
 
 public class MainActivity extends AppCompatActivity {
@@ -74,13 +75,22 @@ public class MainActivity extends AppCompatActivity {
             displayRole = "사용자";
         }
 
-        // 3. 초기 툴바 제목 설정 (첫 번째 메뉴 아이템 제목으로)
+        // 3. 초기 설정 (첫 번째 메뉴 선택 및 화면 로드)
         if (navigationView.getMenu().size() > 0) {
             MenuItem firstItem = navigationView.getMenu().getItem(0);
+            
+            // 툴바 제목을 첫 번째 메뉴의 이름으로 설정
             if (getSupportActionBar() != null) {
                 getSupportActionBar().setTitle(firstItem.getTitle());
             }
             firstItem.setChecked(true);
+            
+            // 사용자인 경우 첫 화면으로 '오늘의 출결' 프래그먼트 표시
+            if ("ROLE_USER".equals(role)) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new TodayAttendanceFragment())
+                        .commit();
+            }
         }
 
         // 메뉴 아이템 클릭 리스너 설정
@@ -92,7 +102,15 @@ public class MainActivity extends AppCompatActivity {
                 getSupportActionBar().setTitle(item.getTitle());
             }
             
-            Toast.makeText(MainActivity.this, item.getTitle() + " 선택됨", Toast.LENGTH_SHORT).show();
+            // "오늘의 출결" 메뉴 클릭 시 프래그먼트 교체
+            if (id == R.id.nav_user_today) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new TodayAttendanceFragment())
+                        .commit();
+            } 
+            // 다른 메뉴에 대한 프래그먼트 교체 로직은 여기에 추가하면 됩니다.
+            // else if (id == R.id.nav_user_my_status) { ... }
+            
             drawerLayout.closeDrawer(GravityCompat.END);
             return true;
         });
