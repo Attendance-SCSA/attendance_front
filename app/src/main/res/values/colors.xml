@@ -2,4 +2,17 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Warm Colors -->
+    <color name="warm_primary">#D84315</color> <!-- Deep Orange 800 -->
+    <color name="warm_on_primary">#FFFFFF</color>
+    <color name="warm_primary_container">#FFDBCF</color>
+    <color name="warm_on_primary_container">#3A0B00</color>
+
+    <color name="warm_secondary">#775600</color> <!-- Orange/Brown -->
+    <color name="warm_on_secondary">#FFFFFF</color>
+    <color name="warm_secondary_container">#FFDDAA</color>
+    <color name="warm_on_secondary_container">#251A00</color>
+
+    <color name="scsa_blue">#2166B0</color> <!-- Color from the button in the image roughly -->
 </resources>
