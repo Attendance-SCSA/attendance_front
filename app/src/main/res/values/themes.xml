@@ -2,8 +2,33 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.SCSAattend" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">@color/warm_primary</item>
+        <item name="colorOnPrimary">@color/warm_on_primary</item>
+        <item name="colorPrimaryContainer">@color/warm_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/warm_on_primary_container</item>
+        <item name="colorSecondary">@color/warm_secondary</item>
+        <item name="colorOnSecondary">@color/warm_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/warm_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/warm_on_secondary_container</item>
     </style>
 
-    <style name="Theme.SCSAattend" parent="Base.Theme.SCSAattend" />
+    <!-- LoginActivity 용 테마 (흰색 상태바, 검은 아이콘) -->
+    <style name="Theme.SCSAattend.Login" parent="Base.Theme.SCSAattend">
+        <item name="android:statusBarColor">@color/white</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    </style>
+
+    <!-- MainActivity 용 테마 (파란색 상태바, 흰 아이콘) -->
+    <style name="Theme.SCSAattend.Main" parent="Base.Theme.SCSAattend">
+        <!-- 상태바 배경색을 툴바 색상(@color/scsa_blue)과 동일하게 설정 -->
+        <item name="android:statusBarColor">@color/scsa_blue</item>
+        <!-- 배경이 어두운 색(파란색)이므로 상태바 아이콘(시간, 배터리 등)을 흰색으로 설정 -->
+        <item name="android:windowLightStatusBar">false</item>
+        <!-- 앱이 시스템 바(상태바 등)의 배경을 직접 그리도록 설정 -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    </style>
+
+    <!-- 기본 앱 테마는 Main 테마를 사용하도록 설정 -->
+    <style name="Theme.SCSAattend" parent="Theme.SCSAattend.Main" />
 </resources>
