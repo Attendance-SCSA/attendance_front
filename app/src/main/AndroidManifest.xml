@@ -6,20 +6,26 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/scsa6_icon"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/scsa6_icon"
         android:supportsRtl="true"
-        android:theme="@style/Theme.SCSAattend">
+        android:theme="@style/Theme.SCSAattend.Login">
         <activity
-            android:name=".MainActivity"
-            android:exported="true">
+            android:name=".login.LoginActivity"
+            android:exported="false"
+            android:theme="@style/Theme.SCSAattend.Login">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- MainActivity는 메인용 테마(파란색 상태바) 적용 -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:theme="@style/Theme.SCSAattend.Main" />
     </application>
 
 </manifest>
