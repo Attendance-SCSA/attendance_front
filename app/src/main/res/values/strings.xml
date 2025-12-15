@@ -6,4 +6,16 @@
     <string name="login_button">로그인</string>
     <string name="navigation_drawer_open">네비게이션 드로어 열기</string>
     <string name="navigation_drawer_close">네비게이션 드로어 닫기</string>
+
+    <!-- 사용자용 메뉴 -->
+    <string name="menu_user_today">오늘의 출결</string>
+    <string name="menu_user_my_status">나의 출결현황 조회</string>
+    <string name="menu_user_excuse">사유서 작성</string>
+
+    <!-- 관리자용 메뉴 -->
+    <string name="menu_admin_today">오늘의 출결현황</string>
+    <string name="menu_admin_detail">출결 상세</string>
+    <string name="menu_admin_member">회원 관리</string>
+    <string name="menu_admin_approval">관리자 승인</string>
+    <string name="menu_admin_type_change">출결 타입 변경</string>
 </resources>
