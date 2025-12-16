@@ -1,5 +1,6 @@
 package com.example.scsaattend.user;
 
+import android.Manifest;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -8,17 +9,19 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresPermission;
 import androidx.fragment.app.Fragment;
 import com.example.scsaattend.R;
 import com.example.scsaattend.beacon.BeaconScanner;
 import com.example.scsaattend.dto.CheckInResponse;
+import com.example.scsaattend.dto.CheckOutRequest;
 import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
-// dto 패키지 경로 변경 반영
 import com.example.scsaattend.dto.AttendanceRequest;
 import com.example.scsaattend.dto.AttendanceResponse;
 import java.text.SimpleDateFormat;
@@ -41,8 +44,8 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
     private TextView tvCurrentStatus;
     private TextView tvCheckInTime;
     private TextView tvCheckOutTime;
-    private View layoutCheckInHistory;
-    private View layoutCheckOutHistory;
+    private LinearLayout layoutCheckIn;
+    private LinearLayout layoutCheckOut;
     private View cardHistory;
 
     @Nullable
@@ -50,8 +53,8 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_today_attendance, container, false);
         
-        // API 서비스 초기화 (실제 IP 확인 필수)
-        apiService = RetrofitClient.getClient("http://10.10.0.56:8888").create(ApiService.class);
+        // API 서비스 초기화 (중앙 관리되는 Base URL 사용)
+        apiService = RetrofitClient.getClient("http://192.168.50.211:8888").create(ApiService.class);
 
         // UI 요소 연결
         viewStatusIndicator = view.findViewById(R.id.viewStatusIndicator);
@@ -59,13 +62,16 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
         tvCheckInTime = view.findViewById(R.id.tvCheckInTime);
         tvCheckOutTime = view.findViewById(R.id.tvCheckOutTime);
         cardHistory = view.findViewById(R.id.cardHistory);
+        layoutCheckIn = view.findViewById(R.id.layoutCheckIn);
+        layoutCheckOut = view.findViewById(R.id.layoutCheckOut);
         
-        if (tvCheckInTime != null && tvCheckInTime.getParent() != null && tvCheckInTime.getParent() instanceof View) {
-            layoutCheckInHistory = (View) tvCheckInTime.getParent();
-        }
-        if (tvCheckOutTime != null && tvCheckOutTime.getParent() != null && tvCheckOutTime.getParent() instanceof View) {
-            layoutCheckOutHistory = (View) tvCheckOutTime.getParent();
-        }
+        // 초기 상태: 히스토리 카드 및 내부 레이아웃 보여주기
+        if (cardHistory != null) cardHistory.setVisibility(View.VISIBLE);
+        if (layoutCheckIn != null) layoutCheckIn.setVisibility(View.VISIBLE);
+        if (layoutCheckOut != null) layoutCheckOut.setVisibility(View.VISIBLE);
+        
+        if (tvCheckInTime != null) tvCheckInTime.setText("-");
+        if (tvCheckOutTime != null) tvCheckOutTime.setText("-");
 
         beaconScanner = new BeaconScanner(getContext(), this);
 
@@ -105,7 +111,7 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
             });
         }
 
-        // 3. 출근 버튼 클릭 시 출근 요청
+        // 출근 버튼
         View btnCheckIn = view.findViewById(R.id.btnCheckIn);
         if (btnCheckIn != null) {
             btnCheckIn.setOnClickListener(v -> {
@@ -114,12 +120,12 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
             });
         }
 
+        // 퇴근 버튼
         View btnCheckOut = view.findViewById(R.id.btnCheckOut);
         if (btnCheckOut != null) {
             btnCheckOut.setOnClickListener(v -> {
-                SimpleDateFormat timeFormat = new SimpleDateFormat("a h:mm:ss", Locale.KOREAN);
-                String currentTime = timeFormat.format(new Date());
-                Toast.makeText(getContext(), "퇴근 처리되었습니다. (" + currentTime + ")", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "Check-out Button Clicked");
+                requestCheckOut();
             });
         }
 
@@ -131,33 +137,28 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
 
     private void requestCheckIn() {
         SharedPreferences prefs = requireContext().getSharedPreferences("AuthPrefs", Context.MODE_PRIVATE);
-        // 저장된 ainfoId 가져오기
+        // 출근 요청 전에는 ainfoId가 없을 수도 있고, fetchTodayAttendance()가 완료되지 않아 -1일 수도 있음
         int ainfoId = prefs.getInt("today_ainfo_id", -1);
         
         Log.d(TAG, "Attempting Check-in with ainfoId: " + ainfoId);
 
         if (ainfoId == -1) {
-            Toast.makeText(getContext(), "오늘의 출결 정보를 아직 불러오지 못했습니다. 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show();
-            // 재시도 차원에서 다시 조회를 시도
+            Toast.makeText(getContext(), "오늘의 출결 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show();
             fetchTodayAttendance();
             return;
         }
 
-        // API 호출
+        // 1. PATCH 요청: 빈 JSON 객체 {} 전송
         apiService.checkIn(ainfoId, new Object()).enqueue(new Callback<CheckInResponse>() {
             @Override
             public void onResponse(Call<CheckInResponse> call, Response<CheckInResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    CheckInResponse checkInResponse = response.body();
-                    String newArrivalTime = checkInResponse.getNewArrivalTime();
-                    
-                    Log.d(TAG, "Check-in Success. Time: " + newArrivalTime);
-
-                    updateUIForCheckIn(newArrivalTime);
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "Check-in PATCH Success. Reloading attendance info...");
+                    fetchTodayAttendance();
                     Toast.makeText(getContext(), "출근 처리되었습니다.", Toast.LENGTH_SHORT).show();
                 } else {
                     Log.e(TAG, "Check-in Failed. Code: " + response.code());
-                    Toast.makeText(getContext(), "출근 요청 실패: " + response.code(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "출근 요청 실패", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -169,114 +170,179 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
         });
     }
 
-    private void updateUIForCheckIn(String arrivalTime) {
-        if (viewStatusIndicator != null) {
-            viewStatusIndicator.setBackgroundTintList(
-                requireContext().getResources().getColorStateList(R.color.attendance_light_green, null)
-            );
-        }
-        if (tvCurrentStatus != null) {
-            tvCurrentStatus.setText("출근 완료");
+    private void requestCheckOut() {
+        SharedPreferences prefs = requireContext().getSharedPreferences("AuthPrefs", Context.MODE_PRIVATE);
+        int ainfoId = prefs.getInt("today_ainfo_id", -1);
+
+        Log.d(TAG, "Attempting Check-out with ainfoId: " + ainfoId);
+
+        if (ainfoId == -1) {
+            Toast.makeText(getContext(), "오늘의 출결 정보를 불러오지 못했습니다.", Toast.LENGTH_SHORT).show();
+            fetchTodayAttendance();
+            return;
         }
 
-        if (cardHistory != null) cardHistory.setVisibility(View.VISIBLE);
+        // 퇴근 시간 생성 (ISO 8601 형식 등 서버 요구사항에 맞춤, 예시는 현재 시간)
+        // 요청된 포맷: "2025-12-11T17:55:00Z"
+        // 실제로는 현재 시간을 해당 포맷으로 변환해야 함.
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault());
+        // TimeZone 설정이 필요할 수 있음 (예: sdf.setTimeZone(TimeZone.getTimeZone("UTC")); )
+        // 여기서는 로컬 시간 기준으로 포맷팅 예시
+        String currentLeavingTime = sdf.format(new Date());
         
-        if (layoutCheckInHistory != null) layoutCheckInHistory.setVisibility(View.VISIBLE);
-        if (tvCheckInTime != null) {
-             // 서버 시간 포맷 그대로 표시
-             tvCheckInTime.setText(arrivalTime);
-        }
+        // 비콘 정보는 실제 스캔된 정보를 사용하거나, 없을 경우 기본값/빈값 처리
+        // 예시값 사용 (실제 구현 시 BeaconScanner에서 스캔된 마지막 값을 가져오거나 새로 스캔 필요)
+        String macAddress = "00:00:00:00:00:00"; 
+        int rssi = 0;
+        
+        // BeaconScanner나 저장된 변수에서 값을 가져오는 로직이 있다면 교체 필요
+        // 예: if (lastScannedBeacon != null) { ... }
+
+        CheckOutRequest request = new CheckOutRequest(currentLeavingTime, macAddress, rssi);
+
+        // 1. PATCH 요청: CheckOutRequest 객체 전송
+        apiService.checkOut(ainfoId, request).enqueue(new Callback<CheckInResponse>() {
+            @Override
+            public void onResponse(Call<CheckInResponse> call, Response<CheckInResponse> response) {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "Check-out PATCH Success. Reloading attendance info...");
+                    fetchTodayAttendance();
+                    Toast.makeText(getContext(), "퇴근 처리되었습니다.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Log.e(TAG, "Check-out Failed. Code: " + response.code());
+                    Toast.makeText(getContext(), "퇴근 요청 실패", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CheckInResponse> call, Throwable t) {
+                Log.e(TAG, "Check-out Network Error", t);
+                Toast.makeText(getContext(), "네트워크 오류", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void fetchTodayAttendance() {
         SharedPreferences prefs = requireContext().getSharedPreferences("AuthPrefs", Context.MODE_PRIVATE);
-        // LoginActivity에서 저장한 PK값 사용
+        Log.d(TAG, "AuthPrefs contents: " + prefs.getAll());
         int memId = prefs.getInt("mem_pk", -1);
         
-        Log.d(TAG, "Fetching Today Attendance for memId: " + memId);
-        
+        Log.d(TAG, "fetchTodayAttendance Called. mem_pk: " + memId);
+
         if (memId == -1) {
-            Log.e(TAG, "Invalid Member ID (mem_pk is -1)");
-            // 로그인 정보가 없으면 처리 중단
-            return;
+             Log.e(TAG, "Invalid memId in SharedPrefs");
+             return;
         }
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         String todayDate = sdf.format(new Date());
+        
+        int targetMemId = memId;
 
-        AttendanceRequest request = new AttendanceRequest(todayDate, todayDate, memId);
+        Log.d(TAG, "Requesting Attendance. Date: " + todayDate + ", targetMemId: " + targetMemId);
+
+        AttendanceRequest request = new AttendanceRequest(todayDate, todayDate, targetMemId);
 
         apiService.getAttendance(request).enqueue(new Callback<List<AttendanceResponse>>() {
             @Override
             public void onResponse(Call<List<AttendanceResponse>> call, Response<List<AttendanceResponse>> response) {
-                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                    AttendanceResponse attendance = response.body().get(0);
+                Log.d(TAG, "API Response Code: " + response.code());
+                if (response.isSuccessful() && response.body() != null) {
+                    List<AttendanceResponse> list = response.body();
+                    Log.d(TAG, "API Response Body Size: " + list.size());
                     
-                    // ainfoId 저장 (중요!)
-                    SharedPreferences prefs = requireContext().getSharedPreferences("AuthPrefs", Context.MODE_PRIVATE);
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.putInt("today_ainfo_id", attendance.getAinfoId());
-                    editor.apply();
-                    
-                    Log.d(TAG, "Attendance Fetched. ainfoId: " + attendance.getAinfoId());
+                    if (!list.isEmpty()) {
+                        AttendanceResponse attendance = list.get(0);
+                        
+                        Log.d(TAG, "Attendance Found. ainfoId: " + attendance.getAinfoId() + 
+                              ", arrivalTime: " + attendance.getArrivalTime());
 
-                    updateAttendanceUI(attendance);
+                        SharedPreferences prefs = requireContext().getSharedPreferences("AuthPrefs", Context.MODE_PRIVATE);
+                        prefs.edit().putInt("today_ainfo_id", attendance.getAinfoId()).apply();
+                        
+                        updateAttendanceUI(attendance);
+                    } else {
+                        Log.d(TAG, "Response List is Empty");
+                        updateUIAsAbsent();
+                    }
                 } else {
-                    Log.d(TAG, "No Attendance Data Found or List Empty");
+                    Log.e(TAG, "Response Not Successful");
                     updateUIAsAbsent();
                 }
             }
 
             @Override
             public void onFailure(Call<List<AttendanceResponse>> call, Throwable t) {
-                Log.e(TAG, "Fetch Attendance Failed", t);
+                Log.e(TAG, "API Call Failed", t);
                 updateUIAsAbsent();
             }
         });
     }
 
     private void updateAttendanceUI(AttendanceResponse attendance) {
-        String arrivalTime = attendance.getArrivalTime();
-        String leavingTime = attendance.getLeavingTime();
+        if (getActivity() == null) return;
+        getActivity().runOnUiThread(() -> {
+            String arrivalTime = attendance.getArrivalTime();
+            String leavingTime = attendance.getLeavingTime();
 
-        if (arrivalTime == null) {
-            updateUIAsAbsent();
-        } else {
-            if (viewStatusIndicator != null) {
-                viewStatusIndicator.setBackgroundTintList(
-                    requireContext().getResources().getColorStateList(R.color.attendance_light_green, null)
-                );
-            }
-            if (tvCurrentStatus != null) {
-                tvCurrentStatus.setText("출근 완료");
-            }
-
+            // 1. 카드 및 내부 레이아웃 항상 표시 (값 유무와 상관없이)
             if (cardHistory != null) cardHistory.setVisibility(View.VISIBLE);
-            
-            if (layoutCheckInHistory != null) layoutCheckInHistory.setVisibility(View.VISIBLE);
-            if (tvCheckInTime != null) tvCheckInTime.setText(arrivalTime);
+            if (layoutCheckIn != null) layoutCheckIn.setVisibility(View.VISIBLE);
+            if (layoutCheckOut != null) layoutCheckOut.setVisibility(View.VISIBLE);
 
-            if (leavingTime != null) {
-                if (layoutCheckOutHistory != null) layoutCheckOutHistory.setVisibility(View.VISIBLE);
-                if (tvCheckOutTime != null) tvCheckOutTime.setText(leavingTime);
-            } else {
-                if (layoutCheckOutHistory != null) layoutCheckOutHistory.setVisibility(View.GONE);
+            // 값 설정 (값이 없으면 "출근 정보 없음" / "퇴근 정보 없음" 또는 "-")
+            if (tvCheckInTime != null) {
+                tvCheckInTime.setText(arrivalTime != null ? arrivalTime : "출근 정보 없음");
             }
-        }
+            if (tvCheckOutTime != null) {
+                tvCheckOutTime.setText(leavingTime != null ? leavingTime : "퇴근 정보 없음");
+            }
+
+            // 2. 상태 표시등 색상 변경
+            if (arrivalTime == null) {
+                // 출근 전 (회색)
+                if (viewStatusIndicator != null) {
+                    viewStatusIndicator.setBackgroundTintList(
+                        requireContext().getResources().getColorStateList(android.R.color.darker_gray, null)
+                    );
+                }
+                if (tvCurrentStatus != null) {
+                    tvCurrentStatus.setText("미출근");
+                }
+            } else {
+                // 출근 완료 (초록색)
+                if (viewStatusIndicator != null) {
+                    viewStatusIndicator.setBackgroundTintList(
+                        requireContext().getResources().getColorStateList(R.color.attendance_light_green, null)
+                    );
+                }
+                if (tvCurrentStatus != null) {
+                    tvCurrentStatus.setText("출근 완료");
+                }
+            }
+        });
     }
 
     private void updateUIAsAbsent() {
-        if (viewStatusIndicator != null) {
-            viewStatusIndicator.setBackgroundTintList(
-                requireContext().getResources().getColorStateList(android.R.color.darker_gray, null)
-            );
-        }
-        if (tvCurrentStatus != null) {
-            tvCurrentStatus.setText("부재중");
-        }
-        if (cardHistory != null) {
-            cardHistory.setVisibility(View.GONE);
-        }
+        if (getActivity() == null) return;
+        getActivity().runOnUiThread(() -> {
+            if (viewStatusIndicator != null) {
+                viewStatusIndicator.setBackgroundTintList(
+                    requireContext().getResources().getColorStateList(android.R.color.darker_gray, null)
+                );
+            }
+            if (tvCurrentStatus != null) {
+                tvCurrentStatus.setText("정보 없음");
+            }
+            
+            // 데이터가 없어도 카드는 숨기지 않음
+            if (cardHistory != null) cardHistory.setVisibility(View.VISIBLE);
+            if (layoutCheckIn != null) layoutCheckIn.setVisibility(View.VISIBLE);
+            if (layoutCheckOut != null) layoutCheckOut.setVisibility(View.VISIBLE);
+            
+            if (tvCheckInTime != null) tvCheckInTime.setText("출근 정보 없음");
+            if (tvCheckOutTime != null) tvCheckOutTime.setText("퇴근 정보 없음");
+        });
     }
     
     @Override
@@ -287,11 +353,11 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
         }
     }
 
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     @Override
     public void onBeaconFound(BluetoothDevice device, int rssi, byte[] scanRecord) {
         if (getActivity() != null) {
             getActivity().runOnUiThread(() -> {
-                Log.d(TAG, "Beacon Found: " + device.getAddress());
                 if (tvConnectedBeacon != null) {
                     String deviceName = device.getName();
                     if (deviceName == null || deviceName.isEmpty()) deviceName = "Unknown";
