@@ -60,7 +60,7 @@ public class UserSelectionDialogFragment extends DialogFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        apiService = RetrofitClient.getClient("http://10.10.0.125:8888").create(ApiService.class);
+        apiService = RetrofitClient.getClient().create(ApiService.class);
 
         ArrayList<User> passedUsers = new ArrayList<>();
         if (getArguments() != null) {

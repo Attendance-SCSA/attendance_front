@@ -1,19 +1,13 @@
 package com.example.scsaattend;
 
 import android.app.Application;
-import android.content.Context;
+
+import com.example.scsaattend.network.RetrofitClient;
 
 public class MyApplication extends Application {
-
-    private static Context context;
-
     @Override
     public void onCreate() {
         super.onCreate();
-        context = getApplicationContext();
-    }
-
-    public static Context getContext() {
-        return context;
+        RetrofitClient.initialize(this);
     }
 }

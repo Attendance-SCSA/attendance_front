@@ -31,7 +31,7 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        apiService = RetrofitClient.getClient("http://10.10.0.125:8888").create(ApiService.class);
+        apiService = RetrofitClient.getClient().create(ApiService.class);
 
         EditText idInput = findViewById(R.id.idInput);
         EditText passwordInput = findViewById(R.id.passwordInput);

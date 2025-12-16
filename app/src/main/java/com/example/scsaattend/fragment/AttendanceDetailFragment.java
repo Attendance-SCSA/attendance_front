@@ -25,10 +25,15 @@ import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
 import com.example.scsaattend.network.dto.AttendanceInfoResponse;
 import com.example.scsaattend.network.dto.AttendanceRequest;
+import com.example.scsaattend.network.dto.BatchUpdateRequest;
+import com.example.scsaattend.network.dto.BatchUpdateResponse;
+import com.example.scsaattend.network.dto.ErrorResponse;
 import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.DateValidatorPointForward;
 import com.google.android.material.datepicker.MaterialDatePicker;
+import com.google.gson.Gson;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,6 +42,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,7 +50,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class AttendanceDetailFragment extends Fragment implements UserSelectionDialogFragment.OnUsersSelectedListener {
+public class AttendanceDetailFragment extends Fragment implements UserSelectionDialogFragment.OnUsersSelectedListener, BatchUpdateDialogFragment.OnUpdateListener {
 
     private static final String TAG = "AttendanceDetailFrag";
     private Button btnStartDate, btnEndDate, btnUserSelect, btnQuery;
@@ -91,7 +97,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         
         bottomActionBar.setVisibility(View.GONE);
 
-        apiService = RetrofitClient.getClient("http://10.10.0.125:8888").create(ApiService.class);
+        apiService = RetrofitClient.getClient().create(ApiService.class);
         btnEndDate.setEnabled(false);
 
         // 리스너 설정
@@ -106,7 +112,15 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         btnToggleFilter.setOnClickListener(v -> toggleFilterVisibility());
         btnSelectAll.setOnClickListener(v -> selectAllItems());
         btnDeselectAll.setOnClickListener(v -> exitSelectionMode()); 
-        btnBatchChange.setOnClickListener(v -> Toast.makeText(getContext(), "일괄 변경 기능 구현 예정", Toast.LENGTH_SHORT).show());
+        btnBatchChange.setOnClickListener(v -> {
+            if (selectedItems.isEmpty()) {
+                Toast.makeText(getContext(), "변경할 항목을 선택해주세요.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            BatchUpdateDialogFragment dialog = BatchUpdateDialogFragment.newInstance();
+            dialog.setOnUpdateListener(this);
+            dialog.show(getParentFragmentManager(), "BatchUpdateDialog");
+        });
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new AttendanceDetailAdapter(attendanceDetailList, this);
@@ -234,6 +248,45 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         this.userList = selectedUsers;
         updateUserSelectionButtonText();
     }
+    
+    @Override
+    public void onUpdate(Map<String, Object> updateData) {
+        List<Long> aInfoIdList = new ArrayList<>(selectedItems);
+        BatchUpdateRequest request = new BatchUpdateRequest(aInfoIdList, updateData);
+
+        apiService.batchUpdateAttendance(request).enqueue(new Callback<BatchUpdateResponse>() {
+            @Override
+            public void onResponse(Call<BatchUpdateResponse> call, Response<BatchUpdateResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Toast.makeText(getContext(), response.body().getMessage(), Toast.LENGTH_LONG).show();
+                    searchAttendanceData(); // Refresh the list
+                } else {
+                    String errorMessage = "일괄 변경에 실패했습니다.";
+                    if (response.errorBody() != null) {
+                        try {
+                            String errorBodyString = response.errorBody().string();
+                            Gson gson = new Gson();
+                            ErrorResponse errorResponse = gson.fromJson(errorBodyString, ErrorResponse.class);
+                            if (errorResponse != null && errorResponse.getMessage() != null) {
+                                errorMessage = errorResponse.getMessage();
+                            }
+                        } catch (IOException e) {
+                            Log.e(TAG, "Error parsing error body", e);
+                        }
+                    }
+                    Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
+                }
+                exitSelectionMode();
+            }
+
+            @Override
+            public void onFailure(Call<BatchUpdateResponse> call, Throwable t) {
+                Log.e(TAG, "Batch update error", t);
+                Toast.makeText(getContext(), "서버와 통신할 수 없습니다.", Toast.LENGTH_SHORT).show();
+                exitSelectionMode();
+            }
+        });
+    }
 
     private void updateUserSelectionButtonText() {
         long selectedCount = userList.stream().filter(u -> u.isSelected).count();
@@ -341,7 +394,11 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
             });
 
             holder.itemView.setOnLongClickListener(v -> {
-                fragment.startSelectionMode(holder.getAdapterPosition());
+                if (!fragment.isSelectionMode) {
+                    fragment.startSelectionMode(holder.getAdapterPosition());
+                } else {
+                    fragment.toggleSelection(holder.getAdapterPosition());
+                }
                 return true;
             });
         }
