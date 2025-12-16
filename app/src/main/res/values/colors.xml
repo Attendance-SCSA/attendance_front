@@ -14,5 +14,10 @@
     <color name="warm_secondary_container">#FFDDAA</color>
     <color name="warm_on_secondary_container">#251A00</color>
 
-    <color name="scsa_blue">#2166B0</color> <!-- Color from the button in the image roughly -->
+    <color name="scsa_blue">#2166B0</color>
+    <color name="scsa_light_blue">#E3F2FD</color>
+
+    <!-- Status Colors -->
+    <color name="status_approved">#4CAF50</color> <!-- Green -->
+    <color name="status_rejected">#F44336</color> <!-- Red -->
 </resources>

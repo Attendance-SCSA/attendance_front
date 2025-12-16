@@ -33,7 +33,7 @@ public class LoginActivity extends AppCompatActivity {
 
         // 안드로이드 에뮬레이터에서 localhost 접속 시 10.0.2.2 사용
         // 만약 실제 기기라면 실행 중인 PC의 IP 주소(예: 192.168.x.x)를 입력해야 합니다.
-        apiService = RetrofitClient.getClient("http://10.10.0.56:8888").create(ApiService.class);
+        apiService = RetrofitClient.getClient("http://10.10.0.125:8888").create(ApiService.class);
 
         EditText idInput = findViewById(R.id.idInput);
         EditText passwordInput = findViewById(R.id.passwordInput);
