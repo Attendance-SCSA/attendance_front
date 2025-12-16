@@ -32,7 +32,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         // API 서비스 초기화
-        apiService = RetrofitClient.getClient("http://10.10.0.56:8888").create(ApiService.class);
+        apiService = RetrofitClient.getClient("http://192.168.50.211:8888").create(ApiService.class);
 
         EditText idInput = findViewById(R.id.idInput);
         EditText passwordInput = findViewById(R.id.passwordInput);

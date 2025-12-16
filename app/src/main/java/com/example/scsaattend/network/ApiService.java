@@ -5,11 +5,13 @@ import android.util.Log;
 import com.example.scsaattend.dto.AttendanceRequest;
 import com.example.scsaattend.dto.AttendanceResponse;
 import com.example.scsaattend.dto.CheckInResponse;
+import com.example.scsaattend.dto.CheckOutRequest;
 import com.example.scsaattend.dto.LoginRequest;
 import com.example.scsaattend.dto.LoginResponse;
 import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 
@@ -17,9 +19,12 @@ public interface ApiService {
     @POST("auth/login")
     Call<LoginResponse> login(@Body LoginRequest request);
 
-    @POST("attendances_info/search")
+    @POST("attendance_info/search")
     Call<List<AttendanceResponse>> getAttendance(@Body AttendanceRequest request);
 
-    @POST("attendances_info/{aInfoId}/arrival")
+    @PATCH("attendance_info/{aInfoId}/arrival")
     Call<CheckInResponse> checkIn(@Path("aInfoId") int aInfoId, @Body Object emptyBody);
+    
+    @PATCH("attendance_info/{aInfoId}/departure")
+    Call<CheckInResponse> checkOut(@Path("aInfoId") int aInfoId, @Body CheckOutRequest request);
 }
