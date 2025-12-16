@@ -17,7 +17,12 @@
     <color name="scsa_blue">#2166B0</color>
     <color name="scsa_light_blue">#E3F2FD</color>
 
-    <!-- Status Colors -->
+    <!-- Status Colors (Background) -->
     <color name="status_approved">#4CAF50</color> <!-- Green -->
     <color name="status_rejected">#F44336</color> <!-- Red -->
+
+    <!-- Status Colors (Text) -->
+    <color name="status_text_normal">#006400</color> <!-- Dark Green -->
+    <color name="status_text_late_early">#FF8C00</color> <!-- Dark Orange -->
+    <color name="status_text_absent">#D32F2F</color> <!-- Dark Red -->
 </resources>

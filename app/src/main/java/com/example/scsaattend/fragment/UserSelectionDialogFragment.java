@@ -1,6 +1,7 @@
 package com.example.scsaattend.fragment;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,17 +17,29 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.scsaattend.R;
+import com.example.scsaattend.network.ApiService;
+import com.example.scsaattend.network.RetrofitClient;
+import com.example.scsaattend.network.dto.MemberDto;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class UserSelectionDialogFragment extends DialogFragment {
 
+    private static final String TAG = "UserSelectionDialog";
     private CheckBox cbSelectAll;
     private RecyclerView rvUserList;
     private UserAdapter adapter;
-    private List<User> userList;
+    private List<User> userList = new ArrayList<>();
     private OnUsersSelectedListener listener;
+    private ApiService apiService;
 
     public interface OnUsersSelectedListener {
         void onUsersSelected(ArrayList<User> selectedUsers);
@@ -47,15 +60,48 @@ public class UserSelectionDialogFragment extends DialogFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        apiService = RetrofitClient.getClient("http://10.10.0.125:8888").create(ApiService.class);
+
+        ArrayList<User> passedUsers = new ArrayList<>();
         if (getArguments() != null) {
             getArguments().setClassLoader(User.class.getClassLoader());
-            userList = getArguments().getParcelableArrayList("users");
+            passedUsers = getArguments().getParcelableArrayList("users");
         }
-        if (userList == null) {
-            userList = new ArrayList<>();
-        }
+        
+        // 이전에 선택된 상태를 Map으로 만들어 빠른 조회를 위함
+        Map<Long, User> previousSelectionMap = passedUsers.stream()
+                .collect(Collectors.toMap(u -> u.id, Function.identity()));
+
+        fetchMembers(previousSelectionMap);
     }
 
+    private void fetchMembers(Map<Long, User> previousSelectionMap) {
+        apiService.getMembers().enqueue(new Callback<List<MemberDto>>() {
+            @Override
+            public void onResponse(Call<List<MemberDto>> call, Response<List<MemberDto>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    userList.clear();
+                    for (MemberDto member : response.body()) {
+                        boolean isSelected = previousSelectionMap.containsKey(member.getId()) ? 
+                                               previousSelectionMap.get(member.getId()).isSelected : false;
+                        userList.add(new User(member.getId(), member.getName(), isSelected));
+                    }
+                    adapter.notifyDataSetChanged();
+                    updateSelectAllCheckBoxState();
+                } else {
+                    Log.e(TAG, "Failed to fetch members: " + response.code());
+                    Toast.makeText(getContext(), "사용자 목록을 불러오지 못했습니다.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<MemberDto>> call, Throwable t) {
+                Log.e(TAG, "Error fetching members", t);
+                Toast.makeText(getContext(), "서버와 통신할 수 없습니다.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    
     @Override
     public void onStart() {
         super.onStart();
@@ -105,18 +151,17 @@ public class UserSelectionDialogFragment extends DialogFragment {
             }
             dismiss();
         });
-        
-        updateSelectAllCheckBoxState();
     }
     
     private void updateSelectAllCheckBoxState() {
+        if (userList == null || userList.isEmpty()) return;
         long selectedCount = userList.stream().filter(u -> u.isSelected).count();
         if (selectedCount == userList.size()) {
             cbSelectAll.setChecked(true);
         } else if (selectedCount == 0) {
             cbSelectAll.setChecked(false);
         } else {
-            cbSelectAll.setChecked(false); // 일부 선택 상태
+            cbSelectAll.setChecked(false); 
         }
     }
 
@@ -140,13 +185,8 @@ public class UserSelectionDialogFragment extends DialogFragment {
             holder.tvUserName.setText(user.name);
             holder.cbUser.setChecked(user.isSelected);
 
-            // 행 전체 클릭 리스너
-            holder.itemView.setOnClickListener(v -> {
-                // 체크박스를 프로그래매틱하게 클릭하여 체크박스의 리스너 로직을 재사용
-                holder.cbUser.performClick();
-            });
+            holder.itemView.setOnClickListener(v -> holder.cbUser.performClick());
 
-            // 체크박스 클릭 리스너
             holder.cbUser.setOnClickListener(v -> {
                 user.isSelected = holder.cbUser.isChecked();
                 updateSelectAllCheckBoxState();

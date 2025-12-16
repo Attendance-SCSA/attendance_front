@@ -4,15 +4,18 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 public class User implements Parcelable {
+    long id;
     String name;
     boolean isSelected;
 
-    public User(String name, boolean isSelected) {
+    public User(long id, String name, boolean isSelected) {
+        this.id = id;
         this.name = name;
         this.isSelected = isSelected;
     }
 
     protected User(Parcel in) {
+        id = in.readLong();
         name = in.readString();
         isSelected = in.readByte() != 0;
     }
@@ -36,6 +39,7 @@ public class User implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(id);
         dest.writeString(name);
         dest.writeByte((byte) (isSelected ? 1 : 0));
     }
