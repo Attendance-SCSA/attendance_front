@@ -58,6 +58,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
     private ApiService apiService;
     private LinearLayout filterContentLayout, bottomActionBar;
     private ImageButton btnToggleFilter;
+    private Button btnSelectAll, btnDeselectAll, btnBatchChange;
 
     private boolean isSelectionMode = false;
     private Set<AttendanceDetailItem> selectedItems = new HashSet<>();
@@ -84,9 +85,11 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         btnToggleFilter = view.findViewById(R.id.btn_toggle_filter);
         bottomActionBar = view.findViewById(R.id.bottom_action_bar);
 
-        Button btnSelectAll = view.findViewById(R.id.btn_select_all);
-        Button btnDeselectAll = view.findViewById(R.id.btn_deselect_all);
-        Button btnBatchChange = view.findViewById(R.id.btn_batch_change);
+        btnSelectAll = view.findViewById(R.id.btn_select_all);
+        btnDeselectAll = view.findViewById(R.id.btn_deselect_all);
+        btnBatchChange = view.findViewById(R.id.btn_batch_change);
+        
+        bottomActionBar.setVisibility(View.GONE);
 
         apiService = RetrofitClient.getClient("http://10.10.0.125:8888").create(ApiService.class);
         btnEndDate.setEnabled(false);
@@ -163,6 +166,10 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
     }
     
     private void searchAttendanceData() {
+        if (isSelectionMode) {
+            exitSelectionMode();
+        }
+
         if (selectedStartDate == -1 || selectedEndDate == -1) {
             Toast.makeText(getContext(), "시작일과 종료일을 선택해주세요.", Toast.LENGTH_SHORT).show();
             return;

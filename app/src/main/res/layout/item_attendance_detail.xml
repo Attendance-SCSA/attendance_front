@@ -18,13 +18,13 @@
         android:padding="12dp"
         android:background="?android:attr/selectableItemBackground">
 
-        <TextView android:id="@+id/tv_date" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="12/10" android:textSize="12sp" android:gravity="center"/>
-        <TextView android:id="@+id/tv_name" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="나정원" android:textSize="12sp" android:gravity="center"/>
-        <TextView android:id="@+id/tv_check_in" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="08:57" android:textSize="12sp" android:gravity="center"/>
-        <TextView android:id="@+id/tv_check_out" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="18:01" android:textSize="12sp" android:gravity="center"/>
-        <TextView android:id="@+id/tv_status" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="정상" android:textSize="12sp" android:gravity="center"/>
-        <TextView android:id="@+id/tv_approval" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="O" android:textSize="12sp" android:gravity="center"/>
-        <TextView android:id="@+id/tv_public_leave" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textSize="12sp" android:gravity="center"/>
+        <TextView android:id="@+id/tv_date" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="12/10" android:textSize="11sp" android:gravity="center"/>
+        <TextView android:id="@+id/tv_name" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.2" android:text="나정원" android:textSize="11sp" android:gravity="center"/>
+        <TextView android:id="@+id/tv_check_in" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="08:57" android:textSize="11sp" android:gravity="center"/>
+        <TextView android:id="@+id/tv_check_out" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="18:01" android:textSize="11sp" android:gravity="center"/>
+        <TextView android:id="@+id/tv_status" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.5" android:text="정상" android:textSize="11sp" android:gravity="center"/>
+        <TextView android:id="@+id/tv_approval" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.8" android:text="O" android:textSize="11sp" android:gravity="center"/>
+        <TextView android:id="@+id/tv_public_leave" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.8" android:text="-" android:textSize="11sp" android:gravity="center"/>
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

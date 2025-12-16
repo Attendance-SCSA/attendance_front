@@ -16,6 +16,7 @@
 
     <color name="scsa_blue">#2166B0</color>
     <color name="scsa_light_blue">#E3F2FD</color>
+    <color name="scsa_blue_transparent">#CC2166B0</color>
 
     <!-- Status Colors (Background) -->
     <color name="status_approved">#4CAF50</color> <!-- Green -->
