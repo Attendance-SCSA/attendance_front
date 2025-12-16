@@ -61,7 +61,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
     private Button btnSelectAll, btnDeselectAll, btnBatchChange;
 
     private boolean isSelectionMode = false;
-    private Set<AttendanceDetailItem> selectedItems = new HashSet<>();
+    private Set<Long> selectedItems = new HashSet<>();
 
     public AttendanceDetailFragment() {}
 
@@ -129,18 +129,18 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
     public void startSelectionMode(int position) {
         isSelectionMode = true;
         selectedItems.clear();
-        selectedItems.add(attendanceDetailList.get(position));
+        selectedItems.add(attendanceDetailList.get(position).aInfoId);
         bottomActionBar.setVisibility(View.VISIBLE);
         updateAllItems();
     }
 
     public void toggleSelection(int position) {
         if (position == -1) return; 
-        AttendanceDetailItem item = attendanceDetailList.get(position);
-        if (selectedItems.contains(item)) {
-            selectedItems.remove(item);
+        long aInfoId = attendanceDetailList.get(position).aInfoId;
+        if (selectedItems.contains(aInfoId)) {
+            selectedItems.remove(aInfoId);
         } else {
-            selectedItems.add(item);
+            selectedItems.add(aInfoId);
         }
         adapter.notifyDataSetChanged();
 
@@ -157,7 +157,9 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
     }
 
     private void selectAllItems() {
-        selectedItems.addAll(attendanceDetailList);
+        for (AttendanceDetailItem item : attendanceDetailList) {
+            selectedItems.add(item.aInfoId);
+        }
         updateAllItems();
     }
 
@@ -201,6 +203,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
                     attendanceDetailList.clear();
                     for (AttendanceInfoResponse res : responseData) {
                         attendanceDetailList.add(new AttendanceDetailItem(
+                                res.getAinfoId(),
                                 res.getADate().substring(5),
                                 res.getMember().getName(),
                                 res.getArrivalTime(),
@@ -283,9 +286,11 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
     }
 
     private static class AttendanceDetailItem {
+        long aInfoId;
         String date, name, checkIn, checkOut, status, approval, publicLeave;
 
-        public AttendanceDetailItem(String date, String name, String checkIn, String checkOut, String status, String approval, String publicLeave) {
+        public AttendanceDetailItem(long aInfoId, String date, String name, String checkIn, String checkOut, String status, String approval, String publicLeave) {
+            this.aInfoId = aInfoId;
             this.date = date;
             this.name = name;
             this.checkIn = checkIn;
@@ -318,7 +323,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
             holder.bind(item);
 
             if (fragment.isSelectionMode) {
-                if (fragment.selectedItems.contains(item)) {
+                if (fragment.selectedItems.contains(item.aInfoId)) {
                     holder.cardView.setCardBackgroundColor(Color.WHITE);
                 } else {
                     holder.cardView.setCardBackgroundColor(Color.LTGRAY);

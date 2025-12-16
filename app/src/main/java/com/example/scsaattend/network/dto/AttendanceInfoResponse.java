@@ -5,6 +5,9 @@ import com.google.gson.annotations.SerializedName;
 // API 응답 리스트의 각 항목을 나타내는 클래스
 public class AttendanceInfoResponse {
 
+    @SerializedName("ainfoId")
+    private long ainfoId;
+
     @SerializedName("member")
     private MemberDto member;
 
@@ -27,6 +30,7 @@ public class AttendanceInfoResponse {
     private String aDate;
 
     // Getters
+    public long getAinfoId() { return ainfoId; }
     public MemberDto getMember() { return member; }
     public String getArrivalTime() { return arrivalTime; }
     public String getLeavingTime() { return leavingTime; }
