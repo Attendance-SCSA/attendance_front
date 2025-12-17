@@ -293,7 +293,7 @@ public class MemberManagementFragment extends Fragment {
     }
 
     private void updateMemberCount() {
-        tvMemberCount.setText("사용자 목록 (" + memberList.size() + "명)");
+        tvMemberCount.setText("학생 목록 (" + memberList.size() + "명)");
     }
 
     private void deleteMember(MemberResponse member, int position) {

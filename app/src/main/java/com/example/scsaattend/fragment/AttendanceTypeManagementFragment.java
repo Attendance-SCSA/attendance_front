@@ -45,6 +45,7 @@ public class AttendanceTypeManagementFragment extends Fragment {
     private TypeAdapter adapter;
     private List<AttendanceTypeResponse> typeList = new ArrayList<>();
     private Button btnAddType;
+    private TextView tvTypeCount;
     private ApiService apiService;
 
     // 시간 저장을 위한 멤버 변수
@@ -61,6 +62,7 @@ public class AttendanceTypeManagementFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.recycler_view_types);
         btnAddType = view.findViewById(R.id.btn_add_type);
+        tvTypeCount = view.findViewById(R.id.tv_type_count);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new TypeAdapter(typeList);
@@ -73,6 +75,10 @@ public class AttendanceTypeManagementFragment extends Fragment {
         fetchAttendanceTypes();
     }
 
+    private void updateTypeCount() {
+        tvTypeCount.setText("출결 유형 목록 (" + typeList.size() + "개)");
+    }
+
     private void fetchAttendanceTypes() {
         apiService.getAttendanceTypes().enqueue(new Callback<List<AttendanceTypeResponse>>() {
             @Override
@@ -81,6 +87,7 @@ public class AttendanceTypeManagementFragment extends Fragment {
                     typeList.clear();
                     typeList.addAll(response.body());
                     adapter.notifyDataSetChanged();
+                    updateTypeCount();
                 } else {
                     Toast.makeText(getContext(), "유형 목록을 불러오지 못했습니다.", Toast.LENGTH_SHORT).show();
                 }
@@ -204,6 +211,7 @@ public class AttendanceTypeManagementFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     typeList.add(response.body());
                     adapter.notifyItemInserted(typeList.size() - 1);
+                    updateTypeCount();
                     Toast.makeText(getContext(), "새로운 출결 유형이 추가되었습니다.", Toast.LENGTH_SHORT).show();
                 } else {
                     try {
@@ -235,6 +243,7 @@ public class AttendanceTypeManagementFragment extends Fragment {
                         typeList.remove(position);
                         adapter.notifyItemRemoved(position);
                         adapter.notifyItemRangeChanged(position, typeList.size());
+                        updateTypeCount();
                     } else if (response.errorBody() != null) {
                         responseBody = response.errorBody().string();
                     } else {

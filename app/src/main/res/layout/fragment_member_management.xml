@@ -17,7 +17,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/btn_add_member"
-        android:text="사용자 목록 (0명)"
+        android:text="학생 목록 (0명)"
         android:textSize="18sp"
         android:textStyle="bold"
         android:layout_marginTop="16dp"
