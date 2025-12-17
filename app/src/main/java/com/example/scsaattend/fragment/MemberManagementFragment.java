@@ -77,8 +77,7 @@ public class MemberManagementFragment extends Fragment {
 
         // 현재 로그인한 사용자 ID 가져오기
         SharedPreferences prefs = requireActivity().getSharedPreferences("AuthPrefs", Context.MODE_PRIVATE);
-        int dbId = prefs.getInt("db_id", -1);
-        currentUserId = (long) dbId;
+        currentUserId = prefs.getLong("user_numeric_id", -1);
 
         btnAddMember.setOnClickListener(v -> showAddMemberDialog());
 
