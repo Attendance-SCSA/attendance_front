@@ -18,13 +18,14 @@ import androidx.annotation.RequiresPermission;
 import androidx.fragment.app.Fragment;
 import com.example.scsaattend.R;
 import com.example.scsaattend.beacon.BeaconScanner;
+import com.example.scsaattend.dto.AttendanceInfoResponse;
+import com.example.scsaattend.dto.AttendanceRequest;
 import com.example.scsaattend.dto.CheckInResponse;
 import com.example.scsaattend.dto.CheckOutRequest;
 import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
-import com.example.scsaattend.dto.AttendanceRequest;
-import com.example.scsaattend.dto.AttendanceResponse;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -132,7 +133,7 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
 
     private void requestCheckIn() {
         SharedPreferences prefs = requireContext().getSharedPreferences("AuthPrefs", Context.MODE_PRIVATE);
-        int ainfoId = prefs.getInt("today_ainfo_id", -1);
+        long ainfoId = prefs.getLong("today_ainfo_id", -1);
         
         Log.d(TAG, "Attempting Check-in with ainfoId: " + ainfoId);
 
@@ -142,7 +143,7 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
             return;
         }
 
-        apiService.checkIn(ainfoId, new Object()).enqueue(new Callback<CheckInResponse>() {
+        apiService.checkIn((int)ainfoId, new Object()).enqueue(new Callback<CheckInResponse>() {
             @Override
             public void onResponse(Call<CheckInResponse> call, Response<CheckInResponse> response) {
                 if (response.isSuccessful()) {
@@ -165,7 +166,7 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
 
     private void requestCheckOut() {
         SharedPreferences prefs = requireContext().getSharedPreferences("AuthPrefs", Context.MODE_PRIVATE);
-        int ainfoId = prefs.getInt("today_ainfo_id", -1);
+        long ainfoId = prefs.getLong("today_ainfo_id", -1);
 
         Log.d(TAG, "Attempting Check-out with ainfoId: " + ainfoId);
 
@@ -183,7 +184,7 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
         
         CheckOutRequest request = new CheckOutRequest(currentLeavingTime, macAddress, rssi);
 
-        apiService.checkOut(ainfoId, request).enqueue(new Callback<CheckInResponse>() {
+        apiService.checkOut((int)ainfoId, request).enqueue(new Callback<CheckInResponse>() {
             @Override
             public void onResponse(Call<CheckInResponse> call, Response<CheckInResponse> response) {
                 if (response.isSuccessful()) {

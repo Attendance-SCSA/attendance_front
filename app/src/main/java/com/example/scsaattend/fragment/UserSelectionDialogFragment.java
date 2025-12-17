@@ -17,9 +17,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.scsaattend.R;
+import com.example.scsaattend.dto.MemberDto;
 import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
-import com.example.scsaattend.network.dto.MemberDto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,7 +68,6 @@ public class UserSelectionDialogFragment extends DialogFragment {
             passedUsers = getArguments().getParcelableArrayList("users");
         }
         
-        // 이전에 선택된 상태를 Map으로 만들어 빠른 조회를 위함
         Map<Long, User> previousSelectionMap = passedUsers.stream()
                 .collect(Collectors.toMap(u -> u.id, Function.identity()));
 

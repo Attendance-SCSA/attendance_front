@@ -6,11 +6,11 @@ public class LoginRequest {
     @SerializedName("loginId")
     private String loginId;
 
-    @SerializedName("password")
-    private String password;
+    @SerializedName("loginPwd")
+    private String loginPwd;
 
-    public LoginRequest(String loginId, String password) {
+    public LoginRequest(String loginId, String loginPwd) {
         this.loginId = loginId;
-        this.password = password;
+        this.loginPwd = loginPwd;
     }
 }
