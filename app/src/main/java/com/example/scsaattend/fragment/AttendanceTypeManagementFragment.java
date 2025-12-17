@@ -107,25 +107,30 @@ public class AttendanceTypeManagementFragment extends Fragment {
         Button btnCancel = dialogView.findViewById(R.id.btn_cancel_add);
         Button btnConfirm = dialogView.findViewById(R.id.btn_confirm_add);
 
-        // 시간 변수 초기화
-        earliestTime = null;
-        startTime = null;
-        endTime = null;
-        latestTime = null;
+        // 시간 변수 및 TextView 초기화
+        earliestTime = "08:00:00";
+        startTime = "09:00:00";
+        endTime = "18:00:00";
+        latestTime = "19:00:00";
 
-        tvEarliestTime.setOnClickListener(v -> showCustomTimePicker(time -> {
+        tvEarliestTime.setText(earliestTime);
+        tvStartTime.setText(startTime);
+        tvEndTime.setText(endTime);
+        tvLatestTime.setText(latestTime);
+
+        tvEarliestTime.setOnClickListener(v -> showCustomTimePicker(8, 0, 0, time -> {
             earliestTime = time;
             tvEarliestTime.setText(earliestTime);
         }));
-        tvStartTime.setOnClickListener(v -> showCustomTimePicker(time -> {
+        tvStartTime.setOnClickListener(v -> showCustomTimePicker(9, 0, 0, time -> {
             startTime = time;
             tvStartTime.setText(startTime);
         }));
-        tvEndTime.setOnClickListener(v -> showCustomTimePicker(time -> {
+        tvEndTime.setOnClickListener(v -> showCustomTimePicker(18, 0, 0, time -> {
             endTime = time;
             tvEndTime.setText(endTime);
         }));
-        tvLatestTime.setOnClickListener(v -> showCustomTimePicker(time -> {
+        tvLatestTime.setOnClickListener(v -> showCustomTimePicker(19, 0, 0, time -> {
             latestTime = time;
             tvLatestTime.setText(latestTime);
         }));
@@ -136,8 +141,8 @@ public class AttendanceTypeManagementFragment extends Fragment {
         btnConfirm.setOnClickListener(v -> {
             String name = etTypeName.getText().toString();
 
-            if (name.isEmpty() || earliestTime == null || startTime == null || endTime == null || latestTime == null) {
-                Toast.makeText(getContext(), "모든 필드를 입력해주세요.", Toast.LENGTH_SHORT).show();
+            if (name.isEmpty()) {
+                Toast.makeText(getContext(), "유형 이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -149,7 +154,7 @@ public class AttendanceTypeManagementFragment extends Fragment {
         dialog.show();
     }
 
-    private void showCustomTimePicker(OnTimeSelectedListener listener) {
+    private void showCustomTimePicker(int defaultHour, int defaultMinute, int defaultSecond, OnTimeSelectedListener listener) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         LayoutInflater inflater = requireActivity().getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_custom_time_picker, null);
@@ -159,17 +164,24 @@ public class AttendanceTypeManagementFragment extends Fragment {
         NumberPicker minutePicker = dialogView.findViewById(R.id.picker_minute);
         NumberPicker secondPicker = dialogView.findViewById(R.id.picker_second);
 
+        NumberPicker.Formatter formatter = value -> String.format(Locale.getDefault(), "%02d", value);
+
         hourPicker.setMinValue(0);
         hourPicker.setMaxValue(23);
+        hourPicker.setFormatter(formatter);
+        hourPicker.setWrapSelectorWheel(false); // 시간 순환 방지
+
         minutePicker.setMinValue(0);
         minutePicker.setMaxValue(59);
+        minutePicker.setFormatter(formatter);
+
         secondPicker.setMinValue(0);
         secondPicker.setMaxValue(59);
+        secondPicker.setFormatter(formatter);
 
-        Calendar c = Calendar.getInstance();
-        hourPicker.setValue(c.get(Calendar.HOUR_OF_DAY));
-        minutePicker.setValue(c.get(Calendar.MINUTE));
-        secondPicker.setValue(c.get(Calendar.SECOND));
+        hourPicker.setValue(defaultHour);
+        minutePicker.setValue(defaultMinute);
+        secondPicker.setValue(defaultSecond);
 
         builder.setTitle("시간 선택");
         builder.setPositiveButton("확인", (dialog, which) -> {

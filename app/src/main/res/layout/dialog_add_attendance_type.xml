@@ -12,45 +12,101 @@
         android:hint="유형 이름"
         android:inputType="text"/>
 
-    <TextView
-        android:id="@+id/tv_earliest_time"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="출근 시작 시간 선택"
-        android:textSize="18sp"
-        android:padding="12dp"
-        android:background="?attr/selectableItemBackground"/>
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="16dp">
 
-    <TextView
-        android:id="@+id/tv_start_time"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="수업 시작 시간 선택"
-        android:textSize="18sp"
-        android:padding="12dp"
-        android:background="?attr/selectableItemBackground"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="출근 시작 :"
+            android:textSize="18sp"/>
 
-    <TextView
-        android:id="@+id/tv_end_time"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="수업 종료 시간 선택"
-        android:textSize="18sp"
-        android:padding="12dp"
-        android:background="?attr/selectableItemBackground"/>
+        <TextView
+            android:id="@+id/tv_earliest_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:padding="12dp"
+            android:background="?attr/selectableItemBackground"
+            android:textSize="18sp"/>
+    </LinearLayout>
 
-    <TextView
-        android:id="@+id/tv_latest_time"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="퇴근 마감 시간 선택"
-        android:textSize="18sp"
-        android:padding="12dp"
-        android:background="?attr/selectableItemBackground"/>
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="수업 시작 :"
+            android:textSize="18sp"/>
+
+        <TextView
+            android:id="@+id/tv_start_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:padding="12dp"
+            android:background="?attr/selectableItemBackground"
+            android:textSize="18sp"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="수업 종료 :"
+            android:textSize="18sp"/>
+
+        <TextView
+            android:id="@+id/tv_end_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:padding="12dp"
+            android:background="?attr/selectableItemBackground"
+            android:textSize="18sp"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="퇴근 마감 :"
+            android:textSize="18sp"/>
+
+        <TextView
+            android:id="@+id/tv_latest_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:padding="12dp"
+            android:background="?attr/selectableItemBackground"
+            android:textSize="18sp"/>
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
