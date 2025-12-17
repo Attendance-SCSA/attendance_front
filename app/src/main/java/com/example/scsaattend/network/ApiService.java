@@ -48,6 +48,6 @@ public interface ApiService {
     // 사용자의 의도가 departure인지 leaving인지, POST인지 PATCH인지 헷갈리는 상황.
     // Turn 38에서 사용자가 "퇴근 버튼... POST 요청... /departure"라고 명시했으므로 그것을 따르는게 맞음.
     
-    @POST("attendance_info/{aInfoId}/leaving")
+    @PATCH("attendance_info/{aInfoId}/leaving")
     Call<CheckInApiResponse> checkOut(@Path("aInfoId") int aInfoId, @Body CheckOutRequest request);
 }
