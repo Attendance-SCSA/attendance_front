@@ -5,6 +5,7 @@ import com.example.scsaattend.dto.AttendanceTypeRequest;
 import com.example.scsaattend.dto.AttendanceTypeResponse;
 import com.example.scsaattend.dto.BatchUpdateRequest;
 import com.example.scsaattend.dto.BatchUpdateResponse;
+import com.example.scsaattend.dto.CalculateStatusRequest;
 import com.example.scsaattend.dto.CheckInApiResponse;
 import com.example.scsaattend.dto.CheckOutRequest;
 import com.example.scsaattend.dto.LoginRequest;
@@ -13,6 +14,7 @@ import com.example.scsaattend.dto.SearchAttendanceRequest;
 import com.example.scsaattend.dto.MemberRegisterRequest;
 import com.example.scsaattend.dto.MemberResponse;
 import com.example.scsaattend.dto.MemberUpdateRequest;
+import com.example.scsaattend.dto.StatusResponse;
 
 import java.util.List;
 
@@ -63,4 +65,7 @@ public interface ApiService {
 
     @DELETE("attendance_types/{typeId}")
     Call<ResponseBody> deleteAttendanceType(@Path("typeId") long typeId);
+
+    @PATCH("attendance_info/calculate-status")
+    Call<StatusResponse> calculateAttendanceStatus(@Body CalculateStatusRequest request);
 }

@@ -25,8 +25,10 @@ import com.example.scsaattend.R;
 import com.example.scsaattend.dto.AttendanceInfoResponse;
 import com.example.scsaattend.dto.BatchUpdateRequest;
 import com.example.scsaattend.dto.BatchUpdateResponse;
+import com.example.scsaattend.dto.CalculateStatusRequest;
 import com.example.scsaattend.dto.ErrorResponse;
 import com.example.scsaattend.dto.SearchAttendanceRequest;
+import com.example.scsaattend.dto.StatusResponse;
 import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
 import com.google.android.material.datepicker.CalendarConstraints;
@@ -138,7 +140,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         builder.setItems(options, (dialog, which) -> {
             switch (which) {
                 case 0:
-                    Toast.makeText(getContext(), "출결 자동 결정 기능은 아직 구현되지 않았습니다.", Toast.LENGTH_SHORT).show();
+                    calculateStatus();
                     break;
                 case 1:
                     AttendanceTypeSelectionDialogFragment typeDialog = AttendanceTypeSelectionDialogFragment.newInstance();
@@ -151,6 +153,30 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
             }
         });
         builder.show();
+    }
+
+    private void calculateStatus() {
+        List<Long> aInfoIdList = new ArrayList<>(selectedItems);
+        CalculateStatusRequest request = new CalculateStatusRequest(aInfoIdList);
+
+        apiService.calculateAttendanceStatus(request).enqueue(new Callback<StatusResponse>() {
+            @Override
+            public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Toast.makeText(getContext(), response.body().getMessage(), Toast.LENGTH_LONG).show();
+                    searchAttendanceData();
+                } else {
+                    Toast.makeText(getContext(), "출석 상태 자동 결정 실패", Toast.LENGTH_SHORT).show();
+                }
+                exitSelectionMode();
+            }
+
+            @Override
+            public void onFailure(Call<StatusResponse> call, Throwable t) {
+                Toast.makeText(getContext(), "서버와 통신할 수 없습니다.", Toast.LENGTH_SHORT).show();
+                exitSelectionMode();
+            }
+        });
     }
 
     private void showIsOffSelectionDialog() {
