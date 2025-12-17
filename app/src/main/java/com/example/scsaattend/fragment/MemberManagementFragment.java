@@ -28,6 +28,7 @@ import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
 import com.example.scsaattend.network.dto.MemberRegisterRequest;
 import com.example.scsaattend.network.dto.MemberResponse;
+import com.example.scsaattend.network.dto.MemberUpdateRequest;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -146,6 +147,64 @@ public class MemberManagementFragment extends Fragment {
                         loadMembers(); // 목록 갱신
                     } else {
                         Toast.makeText(getContext(), "추가 실패: " + response.code(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<Void> call, Throwable t) {
+                    Toast.makeText(getContext(), "서버 오류: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+
+        dialog.show();
+    }
+
+    private void showChangePasswordDialog(MemberResponse member) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        LayoutInflater inflater = requireActivity().getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_change_password, null);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        TextView tvTargetUserName = dialogView.findViewById(R.id.tv_target_user_name);
+        tvTargetUserName.setText("사용자: " + member.getName());
+
+        EditText etNewPassword = dialogView.findViewById(R.id.et_new_password);
+        EditText etNewPasswordConfirm = dialogView.findViewById(R.id.et_new_password_confirm);
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel_change_pwd);
+        Button btnConfirm = dialogView.findViewById(R.id.btn_confirm_change_pwd);
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnConfirm.setOnClickListener(v -> {
+            String newPassword = etNewPassword.getText().toString().trim();
+            String newPasswordConfirm = etNewPasswordConfirm.getText().toString().trim();
+
+            if (newPassword.isEmpty()) {
+                Toast.makeText(getContext(), "새 비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (!newPassword.equals(newPasswordConfirm)) {
+                Toast.makeText(getContext(), "비밀번호가 일치하지 않습니다.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // 비밀번호 변경 요청
+            MemberUpdateRequest request = new MemberUpdateRequest(newPassword, member.getName(), member.getCompany());
+            apiService.updateMember(currentUserId, member.getId(), request).enqueue(new Callback<Void>() {
+                @Override
+                public void onResponse(Call<Void> call, Response<Void> response) {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(getContext(), "비밀번호가 변경되었습니다.", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                    } else {
+                        Toast.makeText(getContext(), "변경 실패: " + response.code(), Toast.LENGTH_SHORT).show();
                     }
                 }
 
@@ -308,7 +367,7 @@ public class MemberManagementFragment extends Fragment {
             holder.tvCompany.setText(member.getCompany());
 
             holder.btnEditPassword.setOnClickListener(v -> {
-                Toast.makeText(v.getContext(), member.getName() + "님 비밀번호 변경", Toast.LENGTH_SHORT).show();
+                showChangePasswordDialog(member);
             });
 
             holder.btnDeleteMember.setOnClickListener(v -> {

@@ -4,6 +4,7 @@ import com.example.scsaattend.network.dto.LoginRequest;
 import com.example.scsaattend.network.dto.LoginResponse;
 import com.example.scsaattend.network.dto.MemberRegisterRequest;
 import com.example.scsaattend.network.dto.MemberResponse;
+import com.example.scsaattend.network.dto.MemberUpdateRequest;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 
@@ -28,4 +30,7 @@ public interface ApiService {
 
     @DELETE("members/{memberId}")
     Call<Void> deleteMember(@Header("userId") Long userId, @Path("memberId") Long memberId);
+
+    @PATCH("members/{memberId}")
+    Call<Void> updateMember(@Header("userId") Long userId, @Path("memberId") Long memberId, @Body MemberUpdateRequest request);
 }
