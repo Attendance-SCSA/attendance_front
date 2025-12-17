@@ -1,9 +1,7 @@
 package com.example.scsaattend.network;
 
-import android.util.Log;
-
-import com.example.scsaattend.dto.AttendanceRequest;
-import com.example.scsaattend.dto.AttendanceResponse;
+import com.example.scsaattend.dto.TodayMyAttendanceRequest;
+import com.example.scsaattend.dto.TodayMyAttendanceResponse;
 import com.example.scsaattend.dto.CheckInResponse;
 import com.example.scsaattend.dto.CheckOutRequest;
 import com.example.scsaattend.dto.LoginRequest;
@@ -20,11 +18,13 @@ public interface ApiService {
     Call<LoginResponse> login(@Body LoginRequest request);
 
     @POST("attendance_info/search")
-    Call<List<AttendanceResponse>> getAttendance(@Body AttendanceRequest request);
+    Call<List<TodayMyAttendanceResponse>> getAttendance(@Body TodayMyAttendanceRequest request);
 
+    // 출근 요청 (빈 JSON 바디 전송)
     @PATCH("attendance_info/{aInfoId}/arrival")
     Call<CheckInResponse> checkIn(@Path("aInfoId") int aInfoId, @Body Object emptyBody);
-    
-    @PATCH("attendance_info/{aInfoId}/departure")
+
+    // 퇴근 요청
+    @PATCH("attendance_info/{aInfoId}/leaving")
     Call<CheckInResponse> checkOut(@Path("aInfoId") int aInfoId, @Body CheckOutRequest request);
 }

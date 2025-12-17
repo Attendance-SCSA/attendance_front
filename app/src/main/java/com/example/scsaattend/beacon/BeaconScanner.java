@@ -1,5 +1,7 @@
 package com.example.scsaattend.beacon;
 
+import static com.example.scsaattend.common.Config.TARGET_BEACON_ADDRESS;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -19,6 +21,7 @@ import android.util.Log;
 import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.RequiresPermission;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -34,7 +37,6 @@ public class BeaconScanner {
     private static final long SCAN_PERIOD = 10000; // 10초 스캔
 
     // 타겟 비콘 MAC 주소 (원하는 비콘 주소로 변경 필요)
-    private static final String TARGET_BEACON_ADDRESS = "C3:00:00:1C:65:03"; 
 
     public interface BeaconScanCallback {
         void onBeaconFound(BluetoothDevice device, int rssi, byte[] scanRecord);
@@ -134,6 +136,7 @@ public class BeaconScanner {
     }
 
     private final ScanCallback scanCallback = new ScanCallback() {
+        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);

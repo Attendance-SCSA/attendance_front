@@ -139,7 +139,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:layout_marginTop="8dp"
-                    android:background="@drawable/check_in_circle"
+                    android:background="@drawable/ic_launcher_background"
                     android:backgroundTint="@color/attendance_light_green"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvStatusTitle"/>
@@ -216,7 +216,6 @@
             app:cardBackgroundColor="@android:color/white"
             app:layout_constraintTop_toBottomOf="@id/layoutButtons"
             app:layout_constraintBottom_toBottomOf="parent">
-            <!-- 200dp 고정 높이 -->
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -234,7 +233,7 @@
 
                 <!-- 출근 기록 -->
                 <LinearLayout
-                    android:id="@+id/layoutCheckIn"
+                    android:id="@+id/layoutCheckInHistory"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
@@ -263,7 +262,7 @@
 
                 <!-- 퇴근 기록 -->
                 <LinearLayout
-                    android:id="@+id/layoutCheckOut"
+                    android:id="@+id/layoutCheckOutHistory"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
