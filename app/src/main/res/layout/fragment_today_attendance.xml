@@ -139,7 +139,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:layout_marginTop="8dp"
-                    android:background="@drawable/ic_launcher_background"
+                    android:background="@drawable/check_in_circle"
                     android:backgroundTint="@color/attendance_light_green"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvStatusTitle"/>

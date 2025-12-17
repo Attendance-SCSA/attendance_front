@@ -1,5 +1,7 @@
 package com.example.scsaattend.network;
 
+import static com.example.scsaattend.common.Config.BASE_URL;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import androidx.annotation.NonNull;
@@ -14,8 +16,6 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
-
-    public static final String BASE_URL = "http://10.10.0.125:8888"; // Corrected IP
     private static Retrofit retrofit = null;
     private static Context appContext;
 

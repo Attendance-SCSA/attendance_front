@@ -17,6 +17,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import com.example.scsaattend.fragment.AttendanceDetailFragment;
+import com.example.scsaattend.fragment.MyAttendanceFragment;
 import com.example.scsaattend.fragment.TodayAttendanceFragment;
 import com.google.android.material.navigation.NavigationView;
 
@@ -93,6 +94,8 @@ public class MainActivity extends AppCompatActivity {
                 fragment = new AttendanceDetailFragment();
             } else if (id == R.id.nav_user_today) {
                 fragment = new TodayAttendanceFragment();
+            } else if (id == R.id.nav_user_my_status) {
+                fragment = new MyAttendanceFragment();
             } else {
                 Toast.makeText(MainActivity.this, item.getTitle() + " 선택됨", Toast.LENGTH_SHORT).show();
             }

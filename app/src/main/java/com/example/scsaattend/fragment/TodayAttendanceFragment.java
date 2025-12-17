@@ -399,8 +399,8 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
     }
 
     private String formatTime(String dateTime) {
-        if (dateTime == null || dateTime.length() < 16) return "-";
-        return dateTime.substring(11, 16);
+        if (dateTime == null) return "-";
+        return dateTime;
     }
 
     @Override
