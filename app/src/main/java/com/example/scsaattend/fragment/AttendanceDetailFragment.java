@@ -27,6 +27,7 @@ import com.example.scsaattend.dto.BatchUpdateRequest;
 import com.example.scsaattend.dto.BatchUpdateResponse;
 import com.example.scsaattend.dto.CalculateStatusRequest;
 import com.example.scsaattend.dto.ErrorResponse;
+import com.example.scsaattend.dto.MemberResponse;
 import com.example.scsaattend.dto.SearchAttendanceRequest;
 import com.example.scsaattend.dto.StatusResponse;
 import com.example.scsaattend.network.ApiService;
@@ -102,7 +103,6 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         bottomActionBar.setVisibility(View.GONE);
 
         apiService = RetrofitClient.getClient().create(ApiService.class);
-        btnEndDate.setEnabled(false);
 
         // 리스너 설정
         btnStartDate.setOnClickListener(v -> showDatePicker(true));
@@ -128,8 +128,46 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         adapter = new AttendanceDetailAdapter(attendanceDetailList, this);
         recyclerView.setAdapter(adapter);
 
-        updateUserSelectionButtonText();
-        updateRecordCount();
+        initializeAndLoadData();
+    }
+
+    private void initializeAndLoadData() {
+        // 오늘 날짜로 기본 필터 설정
+        selectedStartDate = MaterialDatePicker.todayInUtcMilliseconds();
+        selectedEndDate = MaterialDatePicker.todayInUtcMilliseconds();
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String today = sdf.format(new Date());
+        btnStartDate.setText(today);
+        btnEndDate.setText(today);
+        btnEndDate.setEnabled(true);
+
+        // 전체 사용자 목록을 불러온 후, 자동으로 출결 데이터 조회
+        fetchAllUsersAndSearch();
+    }
+
+    private void fetchAllUsersAndSearch() {
+        apiService.getMembers().enqueue(new Callback<List<MemberResponse>>() {
+            @Override
+            public void onResponse(Call<List<MemberResponse>> call, Response<List<MemberResponse>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    userList.clear();
+                    for (MemberResponse member : response.body()) {
+                        // 기본값 "전체"를 위해 isSelected는 false로 둠
+                        userList.add(new SelectableUser(member.getId(), member.getName(), false));
+                    }
+                    updateUserSelectionButtonText();
+                    searchAttendanceData(); // 사용자 로딩 후 자동 검색
+                } else {
+                    Toast.makeText(getContext(), "사용자 목록을 불러오지 못했습니다.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<MemberResponse>> call, Throwable t) {
+                Toast.makeText(getContext(), "사용자 목록 로딩 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void showBatchChangeOptions() {
@@ -265,10 +303,16 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
                 .map(u -> u.id)
                 .collect(Collectors.toList());
 
-        if (selectedMemberIds.isEmpty()) {
+        // 사용자가 선택되지 않았으면 전체 사용자를 대상으로 함
+        if (selectedMemberIds.isEmpty() && !userList.isEmpty()) {
             selectedMemberIds = userList.stream().map(u -> u.id).collect(Collectors.toList());
         }
         
+        if (selectedMemberIds.isEmpty()) {
+             Toast.makeText(getContext(), "조회할 사용자가 없습니다.", Toast.LENGTH_SHORT).show();
+             return;
+        }
+
         SearchAttendanceRequest request = new SearchAttendanceRequest(startDate, endDate, selectedMemberIds);
 
         apiService.searchAttendance(request).enqueue(new Callback<List<AttendanceInfoResponse>>() {
