@@ -12,22 +12,29 @@ public class LoginResponse {
     @SerializedName("name")
     private String name;
 
+    @SerializedName("company")
+    private String company;
+
     @SerializedName("role")
     private String role;
 
-    public long getId() {
-        return id;
+    @SerializedName("startDay")
+    private String startDay;
+
+    @SerializedName("endDay")
+    private String endDay;
+
+    public String getRole() {
+        return role;
     }
 
     public String getLoginId() {
         return loginId;
     }
-
+    
     public String getName() {
         return name;
     }
 
-    public String getRole() {
-        return role;
-    }
+    public long getId() {return id; }
 }

@@ -10,10 +10,16 @@ import com.example.scsaattend.dto.LoginRequest;
 import com.example.scsaattend.dto.LoginResponse;
 import com.example.scsaattend.dto.MemberDto;
 import com.example.scsaattend.dto.SearchAttendanceRequest;
+import com.example.scsaattend.dto.MemberRegisterRequest;
+import com.example.scsaattend.dto.MemberResponse;
+import com.example.scsaattend.dto.MemberUpdateRequest;
+
 import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Header;
 import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
@@ -27,7 +33,7 @@ public interface ApiService {
     Call<List<AttendanceInfoResponse>> searchAttendance(@Body SearchAttendanceRequest request);
 
     @GET("members")
-    Call<List<MemberDto>> getMembers();
+    Call<List<com.example.scsaattend.dto.MemberResponse>> getMembers();
 
     @GET("attendance_types")
     Call<List<AttendanceTypeDto>> getAttendanceTypes();
@@ -40,4 +46,13 @@ public interface ApiService {
 
     @PATCH("attendance_info/{aInfoId}/leaving")
     Call<CheckInApiResponse> checkOut(@Path("aInfoId") int aInfoId, @Body CheckOutRequest request);
+
+    @POST("members")
+    Call<Void> registerMember(@Header("userId") Long userId, @Body com.example.scsaattend.dto.MemberRegisterRequest request);
+
+    @DELETE("members/{memberId}")
+    Call<Void> deleteMember(@Header("userId") Long userId, @Path("memberId") Long memberId);
+
+    @PATCH("members/{memberId}")
+    Call<Void> updateMember(@Header("userId") Long userId, @Path("memberId") Long memberId, @Body com.example.scsaattend.dto.MemberUpdateRequest request);
 }
