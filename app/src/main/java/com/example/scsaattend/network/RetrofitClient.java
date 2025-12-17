@@ -2,11 +2,10 @@ package com.example.scsaattend.network;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-
 import androidx.annotation.NonNull;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.io.IOException;
-
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -16,11 +15,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
 
-    public static final String BASE_URL = "http://10.10.0.125:8888";
+    public static final String BASE_URL = "http://10.10.0.125:8888"; // Corrected IP
     private static Retrofit retrofit = null;
     private static Context appContext;
 
-    // Application Context를 받기 위한 초기화 메서드
     public static void initialize(Context context) {
         appContext = context.getApplicationContext();
     }
@@ -37,12 +35,10 @@ public class RetrofitClient {
                     public Response intercept(@NonNull Chain chain) throws IOException {
                         Request originalRequest = chain.request();
 
-                        // Don't add header to login requests
                         if (originalRequest.url().encodedPath().contains("auth/login")) {
                             return chain.proceed(originalRequest);
                         }
 
-                        // For other requests, add userId header
                         SharedPreferences prefs = appContext.getSharedPreferences("AuthPrefs", Context.MODE_PRIVATE);
                         long userId = prefs.getLong("user_numeric_id", -1);
 
@@ -60,10 +56,14 @@ public class RetrofitClient {
 
     public static Retrofit getClient() {
         if (retrofit == null) {
+            Gson gson = new GsonBuilder()
+                    .setLenient()
+                    .create();
+
             retrofit = new Retrofit.Builder()
                     .baseUrl(BASE_URL)
-                    .client(getOkHttpClient()) // Use OkHttpClient with interceptor
-                    .addConverterFactory(GsonConverterFactory.create())
+                    .client(getOkHttpClient())
+                    .addConverterFactory(GsonConverterFactory.create(gson))
                     .build();
         }
         return retrofit;

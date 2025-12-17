@@ -16,8 +16,8 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
-
 import com.example.scsaattend.fragment.AttendanceDetailFragment;
+import com.example.scsaattend.user.TodayAttendanceFragment;
 import com.google.android.material.navigation.NavigationView;
 
 public class MainActivity extends AppCompatActivity {
@@ -64,9 +64,17 @@ public class MainActivity extends AppCompatActivity {
         if ("ROLE_ADMIN".equals(role)) {
             navigationView.inflateMenu(R.menu.activity_main_drawer_admin);
             displayRole = "관리자";
+            // 관리자의 첫 화면 설정
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new AttendanceDetailFragment())
+                    .commit();
         } else {
             navigationView.inflateMenu(R.menu.activity_main_drawer_user);
             displayRole = "사용자";
+            // 사용자의 첫 화면 설정
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new TodayAttendanceFragment())
+                    .commit();
         }
 
         if (navigationView.getMenu().size() > 0) {
@@ -81,10 +89,11 @@ public class MainActivity extends AppCompatActivity {
             int id = item.getItemId();
             Fragment fragment = null;
 
-            if (id == R.id.nav_admin_detail) { // '출결 상세' 메뉴 아이템 ID
+            if (id == R.id.nav_admin_detail) {
                 fragment = new AttendanceDetailFragment();
+            } else if (id == R.id.nav_user_today) {
+                fragment = new TodayAttendanceFragment();
             } else {
-                // 다른 메뉴 아이템에 대한 프래그먼트 처리
                 Toast.makeText(MainActivity.this, item.getTitle() + " 선택됨", Toast.LENGTH_SHORT).show();
             }
 
