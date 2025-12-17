@@ -1,4 +1,4 @@
-package com.example.scsaattend.network.dto;
+package com.example.scsaattend.dto;
 
 import com.google.gson.annotations.SerializedName;
 

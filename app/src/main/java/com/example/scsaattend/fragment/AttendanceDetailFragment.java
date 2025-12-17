@@ -21,13 +21,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.scsaattend.R;
+import com.example.scsaattend.dto.SearchAttendanceRequest;
 import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
-import com.example.scsaattend.network.dto.AttendanceInfoResponse;
-import com.example.scsaattend.network.dto.AttendanceRequest;
-import com.example.scsaattend.network.dto.BatchUpdateRequest;
-import com.example.scsaattend.network.dto.BatchUpdateResponse;
-import com.example.scsaattend.network.dto.ErrorResponse;
+import com.example.scsaattend.dto.AttendanceInfoResponse;
+import com.example.scsaattend.dto.BatchUpdateRequest;
+import com.example.scsaattend.dto.BatchUpdateResponse;
+import com.example.scsaattend.dto.ErrorResponse;
 import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.DateValidatorPointForward;
 import com.google.android.material.datepicker.MaterialDatePicker;
@@ -203,8 +203,8 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         if (selectedMemberIds.isEmpty()) {
             selectedMemberIds = userList.stream().map(u -> u.id).collect(Collectors.toList());
         }
-        
-        AttendanceRequest request = new AttendanceRequest(startDate, endDate, selectedMemberIds);
+
+        SearchAttendanceRequest request = new SearchAttendanceRequest(startDate, endDate, selectedMemberIds);
 
         apiService.searchAttendance(request).enqueue(new Callback<List<AttendanceInfoResponse>>() {
             @Override

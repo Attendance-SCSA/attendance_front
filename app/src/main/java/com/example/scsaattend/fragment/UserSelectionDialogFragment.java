@@ -19,7 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.scsaattend.R;
 import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
-import com.example.scsaattend.network.dto.MemberDto;
+import com.example.scsaattend.dto.MemberDto;
 
 import java.util.ArrayList;
 import java.util.List;

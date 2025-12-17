@@ -1,10 +1,10 @@
-package com.example.scsaattend.network.dto;
+package com.example.scsaattend.dto;
 
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-public class AttendanceRequest {
+public class SearchAttendanceRequest {
 
     @SerializedName("startDate")
     private String startDate;
@@ -12,12 +12,12 @@ public class AttendanceRequest {
     @SerializedName("endDate")
     private String endDate;
 
-    @SerializedName("memIdList")
-    private List<Long> memIdList;
+    @SerializedName("memberIds")
+    private List<Long> memberIds;
 
-    public AttendanceRequest(String startDate, String endDate, List<Long> memIdList) {
+    public SearchAttendanceRequest(String startDate, String endDate, List<Long> memberIds) {
         this.startDate = startDate;
         this.endDate = endDate;
-        this.memIdList = memIdList;
+        this.memberIds = memberIds;
     }
 }

@@ -28,15 +28,16 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-public class BatchUpdateDialogFragment extends DialogFragment {
+public class BatchUpdateDialogFragment extends DialogFragment implements AttendanceTypeSelectionDialogFragment.OnAttendanceTypeSelectedListener {
 
     private CheckBox cbAttendanceType, cbIsOff, cbArrivalTime, cbLeavingTime, cbStatus, cbApproval, cbIsOfficial, cbAdminNote;
-    private Spinner spinnerAttendanceType, spinnerStatus, spinnerApproval;
+    private TextView tvAttendanceType, tvArrivalTime, tvLeavingTime;
+    private Spinner spinnerStatus, spinnerApproval;
     private RadioGroup rgIsOff, rgIsOfficial;
-    private TextView tvArrivalTime, tvLeavingTime;
     private EditText etAdminNote;
     private ImageButton btnClearLeavingTime;
 
+    private Long selectedTypeId = null;
     private String arrivalTime = null;
     private String leavingTime = null;
 
@@ -87,7 +88,7 @@ public class BatchUpdateDialogFragment extends DialogFragment {
         cbIsOfficial = view.findViewById(R.id.cb_is_official);
         cbAdminNote = view.findViewById(R.id.cb_admin_note);
 
-        spinnerAttendanceType = view.findViewById(R.id.spinner_attendance_type);
+        tvAttendanceType = view.findViewById(R.id.tv_attendance_type);
         spinnerStatus = view.findViewById(R.id.spinner_status);
         spinnerApproval = view.findViewById(R.id.spinner_approval);
 
@@ -106,9 +107,6 @@ public class BatchUpdateDialogFragment extends DialogFragment {
     }
 
     private void setupSpinners() {
-        ArrayAdapter<String> attendanceTypeAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, new String[]{"유형 선택", "기본"});
-        spinnerAttendanceType.setAdapter(attendanceTypeAdapter);
-
         ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, new String[]{"상태 선택", "출석", "지각/조퇴", "결석"});
         spinnerStatus.setAdapter(statusAdapter);
 
@@ -121,6 +119,12 @@ public class BatchUpdateDialogFragment extends DialogFragment {
         for (CheckBox cb : checkBoxes) {
             cb.setOnCheckedChangeListener((buttonView, isChecked) -> updateUIState());
         }
+        
+        tvAttendanceType.setOnClickListener(v -> {
+            AttendanceTypeSelectionDialogFragment dialog = AttendanceTypeSelectionDialogFragment.newInstance();
+            dialog.setOnAttendanceTypeSelectedListener(this);
+            dialog.show(getParentFragmentManager(), "AttendanceTypeSelectionDialog");
+        });
 
         tvArrivalTime.setOnClickListener(v -> showCustomTimePicker(true));
         tvLeavingTime.setOnClickListener(v -> showCustomTimePicker(false));
@@ -129,6 +133,12 @@ public class BatchUpdateDialogFragment extends DialogFragment {
             tvLeavingTime.setText("퇴근 시간 선택");
             tvLeavingTime.setHint("퇴근 시간을 null로 설정");
         });
+    }
+
+    @Override
+    public void onAttendanceTypeSelected(long typeId, String typeName) {
+        selectedTypeId = typeId;
+        tvAttendanceType.setText(typeName);
     }
 
     private void showCustomTimePicker(boolean isArrival) {
@@ -170,7 +180,7 @@ public class BatchUpdateDialogFragment extends DialogFragment {
     }
 
     private void updateUIState() {
-        spinnerAttendanceType.setEnabled(cbAttendanceType.isChecked());
+        tvAttendanceType.setEnabled(cbAttendanceType.isChecked());
         for (int i = 0; i < rgIsOff.getChildCount(); i++) {
             rgIsOff.getChildAt(i).setEnabled(cbIsOff.isChecked());
         }
@@ -189,8 +199,8 @@ public class BatchUpdateDialogFragment extends DialogFragment {
         Map<String, Object> updateData = new HashMap<>();
 
         if (cbAttendanceType.isChecked()) {
-            if (spinnerAttendanceType.getSelectedItemPosition() > 0) {
-                updateData.put("aTypeId", 1L); // Placeholder
+            if (selectedTypeId != null) {
+                updateData.put("aTypeId", selectedTypeId);
             }
         }
 
