@@ -17,7 +17,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import com.example.scsaattend.fragment.AttendanceDetailFragment;
-import com.example.scsaattend.user.TodayAttendanceFragment;
+import com.example.scsaattend.fragment.TodayAttendanceFragment;
 import com.google.android.material.navigation.NavigationView;
 
 public class MainActivity extends AppCompatActivity {

@@ -21,13 +21,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.scsaattend.R;
-import com.example.scsaattend.dto.SearchAttendanceRequest;
-import com.example.scsaattend.network.ApiService;
-import com.example.scsaattend.network.RetrofitClient;
 import com.example.scsaattend.dto.AttendanceInfoResponse;
 import com.example.scsaattend.dto.BatchUpdateRequest;
 import com.example.scsaattend.dto.BatchUpdateResponse;
 import com.example.scsaattend.dto.ErrorResponse;
+import com.example.scsaattend.dto.SearchAttendanceRequest;
+import com.example.scsaattend.network.ApiService;
+import com.example.scsaattend.network.RetrofitClient;
 import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.DateValidatorPointForward;
 import com.google.android.material.datepicker.MaterialDatePicker;
@@ -58,7 +58,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
     private RecyclerView recyclerView;
     private AttendanceDetailAdapter adapter;
     private List<AttendanceDetailItem> attendanceDetailList = new ArrayList<>();
-    private ArrayList<User> userList = new ArrayList<>();
+    private ArrayList<SelectableUser> userList = new ArrayList<>();
     private long selectedStartDate = -1;
     private long selectedEndDate = -1;
     private ApiService apiService;
@@ -203,7 +203,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         if (selectedMemberIds.isEmpty()) {
             selectedMemberIds = userList.stream().map(u -> u.id).collect(Collectors.toList());
         }
-
+        
         SearchAttendanceRequest request = new SearchAttendanceRequest(startDate, endDate, selectedMemberIds);
 
         apiService.searchAttendance(request).enqueue(new Callback<List<AttendanceInfoResponse>>() {
@@ -245,7 +245,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
     }
 
     @Override
-    public void onUsersSelected(ArrayList<User> selectedUsers) {
+    public void onUsersSelected(ArrayList<SelectableUser> selectedUsers) {
         this.userList = selectedUsers;
         updateUserSelectionButtonText();
     }

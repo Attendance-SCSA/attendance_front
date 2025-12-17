@@ -17,9 +17,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.scsaattend.R;
+import com.example.scsaattend.dto.MemberDto;
 import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
-import com.example.scsaattend.dto.MemberDto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,15 +37,15 @@ public class UserSelectionDialogFragment extends DialogFragment {
     private CheckBox cbSelectAll;
     private RecyclerView rvUserList;
     private UserAdapter adapter;
-    private List<User> userList = new ArrayList<>();
+    private List<SelectableUser> userList = new ArrayList<>();
     private OnUsersSelectedListener listener;
     private ApiService apiService;
 
     public interface OnUsersSelectedListener {
-        void onUsersSelected(ArrayList<User> selectedUsers);
+        void onUsersSelected(ArrayList<SelectableUser> selectedUsers);
     }
 
-    public static UserSelectionDialogFragment newInstance(ArrayList<User> users) {
+    public static UserSelectionDialogFragment newInstance(ArrayList<SelectableUser> users) {
         UserSelectionDialogFragment fragment = new UserSelectionDialogFragment();
         Bundle args = new Bundle();
         args.putParcelableArrayList("users", users);
@@ -62,29 +62,28 @@ public class UserSelectionDialogFragment extends DialogFragment {
         super.onCreate(savedInstanceState);
         apiService = RetrofitClient.getClient().create(ApiService.class);
 
-        ArrayList<User> passedUsers = new ArrayList<>();
+        ArrayList<SelectableUser> passedUsers = new ArrayList<>();
         if (getArguments() != null) {
-            getArguments().setClassLoader(User.class.getClassLoader());
+            getArguments().setClassLoader(SelectableUser.class.getClassLoader());
             passedUsers = getArguments().getParcelableArrayList("users");
         }
-        
-        // 이전에 선택된 상태를 Map으로 만들어 빠른 조회를 위함
-        Map<Long, User> previousSelectionMap = passedUsers.stream()
+
+        Map<Long, SelectableUser> previousSelectionMap = passedUsers.stream()
                 .collect(Collectors.toMap(u -> u.id, Function.identity()));
 
         fetchMembers(previousSelectionMap);
     }
 
-    private void fetchMembers(Map<Long, User> previousSelectionMap) {
+    private void fetchMembers(Map<Long, SelectableUser> previousSelectionMap) {
         apiService.getMembers().enqueue(new Callback<List<MemberDto>>() {
             @Override
             public void onResponse(Call<List<MemberDto>> call, Response<List<MemberDto>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     userList.clear();
                     for (MemberDto member : response.body()) {
-                        boolean isSelected = previousSelectionMap.containsKey(member.getId()) ? 
-                                               previousSelectionMap.get(member.getId()).isSelected : false;
-                        userList.add(new User(member.getId(), member.getName(), isSelected));
+                        boolean isSelected = previousSelectionMap.containsKey(member.getId()) ?
+                                previousSelectionMap.get(member.getId()).isSelected : false;
+                        userList.add(new SelectableUser(member.getId(), member.getName(), isSelected));
                     }
                     adapter.notifyDataSetChanged();
                     updateSelectAllCheckBoxState();
@@ -101,7 +100,7 @@ public class UserSelectionDialogFragment extends DialogFragment {
             }
         });
     }
-    
+
     @Override
     public void onStart() {
         super.onStart();
@@ -131,14 +130,14 @@ public class UserSelectionDialogFragment extends DialogFragment {
 
         cbSelectAll.setOnClickListener(v -> {
             boolean isChecked = cbSelectAll.isChecked();
-            for (User user : userList) {
+            for (SelectableUser user : userList) {
                 user.isSelected = isChecked;
             }
             adapter.notifyDataSetChanged();
         });
 
         btnReset.setOnClickListener(v -> {
-            for (User user : userList) {
+            for (SelectableUser user : userList) {
                 user.isSelected = false;
             }
             updateSelectAllCheckBoxState();
@@ -152,7 +151,7 @@ public class UserSelectionDialogFragment extends DialogFragment {
             dismiss();
         });
     }
-    
+
     private void updateSelectAllCheckBoxState() {
         if (userList == null || userList.isEmpty()) return;
         long selectedCount = userList.stream().filter(u -> u.isSelected).count();
@@ -161,14 +160,14 @@ public class UserSelectionDialogFragment extends DialogFragment {
         } else if (selectedCount == 0) {
             cbSelectAll.setChecked(false);
         } else {
-            cbSelectAll.setChecked(false); 
+            cbSelectAll.setChecked(false);
         }
     }
 
     private class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
-        private final List<User> users;
+        private final List<SelectableUser> users;
 
-        UserAdapter(List<User> users) {
+        UserAdapter(List<SelectableUser> users) {
             this.users = users;
         }
 
@@ -181,7 +180,7 @@ public class UserSelectionDialogFragment extends DialogFragment {
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            User user = users.get(position);
+            SelectableUser user = users.get(position);
             holder.tvUserName.setText(user.name);
             holder.cbUser.setChecked(user.isSelected);
 
