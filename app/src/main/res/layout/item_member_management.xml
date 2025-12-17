@@ -11,43 +11,53 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="16dp"
+        android:padding="12dp"
         android:gravity="center_vertical">
 
         <TextView
             android:id="@+id/tv_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="0.8"
+            android:layout_weight="0.7"
             android:text="이름"
             android:gravity="center"
-            android:textSize="16sp"
+            android:textSize="12sp"
             android:textColor="@android:color/black"/>
 
         <TextView
             android:id="@+id/tv_login_id"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1.2"
+            android:layout_weight="1.0"
             android:text="아이디"
             android:gravity="center"
-            android:textSize="16sp"
+            android:textSize="12sp"
             android:textColor="@android:color/black"/>
 
         <TextView
             android:id="@+id/tv_company"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="0.8"
+            android:layout_weight="0.7"
             android:text="회사"
             android:gravity="center"
-            android:textSize="16sp"
+            android:textSize="12sp"
+            android:textColor="@android:color/black"/>
+
+        <TextView
+            android:id="@+id/tv_education_period"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.5"
+            android:text="YY-MM-DD ~ YY-MM-DD"
+            android:gravity="center"
+            android:textSize="12sp"
             android:textColor="@android:color/black"/>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="0.8"
+            android:layout_weight="0.7"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -57,10 +67,10 @@
                 android:layout_height="24dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_key"
-                android:contentDescription="비밀번호 변경" 
+                android:contentDescription="비밀번호 변경"
                 android:tint="#A020F0"/>
         </LinearLayout>
-        
+
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"

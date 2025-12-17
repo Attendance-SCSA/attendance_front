@@ -347,6 +347,8 @@ public class MemberManagementFragment extends Fragment {
 
     private class MemberAdapter extends RecyclerView.Adapter<MemberAdapter.ViewHolder> {
         private final List<MemberResponse> members;
+        private final SimpleDateFormat sourceFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        private final SimpleDateFormat targetFormat = new SimpleDateFormat("yy-MM-dd", Locale.getDefault());
 
         public MemberAdapter(List<MemberResponse> members) {
             this.members = members;
@@ -366,6 +368,15 @@ public class MemberManagementFragment extends Fragment {
             holder.tvLoginId.setText(member.getLoginId());
             holder.tvCompany.setText(member.getCompany());
 
+            try {
+                Date startDate = sourceFormat.parse(member.getStartDay());
+                Date endDate = sourceFormat.parse(member.getEndDay());
+                String educationPeriod = targetFormat.format(startDate) + " ~ " + targetFormat.format(endDate);
+                holder.tvEducationPeriod.setText(educationPeriod);
+            } catch (ParseException e) {
+                holder.tvEducationPeriod.setText("N/A");
+            }
+
             holder.btnEditPassword.setOnClickListener(v -> {
                 showChangePasswordDialog(member);
             });
@@ -384,7 +395,7 @@ public class MemberManagementFragment extends Fragment {
         }
 
         class ViewHolder extends RecyclerView.ViewHolder {
-            TextView tvName, tvLoginId, tvCompany;
+            TextView tvName, tvLoginId, tvCompany, tvEducationPeriod;
             ImageButton btnEditPassword, btnDeleteMember;
 
             public ViewHolder(@NonNull View itemView) {
@@ -392,6 +403,7 @@ public class MemberManagementFragment extends Fragment {
                 tvName = itemView.findViewById(R.id.tv_name);
                 tvLoginId = itemView.findViewById(R.id.tv_login_id);
                 tvCompany = itemView.findViewById(R.id.tv_company);
+                tvEducationPeriod = itemView.findViewById(R.id.tv_education_period);
                 btnEditPassword = itemView.findViewById(R.id.btn_edit_password);
                 btnDeleteMember = itemView.findViewById(R.id.btn_delete_member);
             }
