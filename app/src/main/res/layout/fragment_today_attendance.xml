@@ -173,8 +173,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="수업 시간 : --:--:-- ~ --:--:--"
-                    android:textSize="12sp"
-                    android:textColor="@android:color/darker_gray"/>
+                    android:textSize="14sp"
+                    android:textColor="@android:color/black"/>
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
