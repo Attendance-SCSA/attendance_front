@@ -17,6 +17,7 @@ import androidx.annotation.RequiresPermission;
 import androidx.fragment.app.Fragment;
 import com.example.scsaattend.R;
 import com.example.scsaattend.beacon.BeaconScanner;
+import com.example.scsaattend.common.Config;
 import com.example.scsaattend.dto.AttendanceInfoResponse;
 import com.example.scsaattend.dto.CheckInApiResponse;
 import com.example.scsaattend.dto.CheckOutRequest;
@@ -112,7 +113,7 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
         if (btnCheckIn != null) {
             btnCheckIn.setOnClickListener(v -> {
                 Log.d(TAG, "Check-in Button Clicked");
-                if (lastScannedMacAddress == null) {
+                if (Config.IS_USING_BEACON && lastScannedMacAddress == null) {
                     Toast.makeText(getContext(), "비콘을 먼저 스캔해주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -124,7 +125,7 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
         if (btnCheckOut != null) {
             btnCheckOut.setOnClickListener(v -> {
                 Log.d(TAG, "Check-out Button Clicked");
-                if (lastScannedMacAddress == null) {
+                if (Config.IS_USING_BEACON && lastScannedMacAddress == null) {
                     Toast.makeText(getContext(), "비콘을 먼저 스캔해주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
