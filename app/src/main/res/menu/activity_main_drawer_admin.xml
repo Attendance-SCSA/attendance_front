@@ -10,10 +10,6 @@
             android:icon="@android:drawable/ic_menu_myplaces"
             android:title="@string/menu_admin_member" />
         <item
-            android:id="@+id/nav_admin_approval"
-            android:icon="@android:drawable/ic_menu_add"
-            android:title="@string/menu_admin_approval" />
-        <item
             android:id="@+id/nav_admin_type_change"
             android:icon="@android:drawable/ic_menu_manage"
             android:title="@string/menu_admin_type_change" />
