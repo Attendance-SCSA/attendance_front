@@ -19,7 +19,6 @@ import androidx.fragment.app.Fragment;
 
 import com.example.scsaattend.fragment.MemberManagementFragment;
 import com.example.scsaattend.fragment.AttendanceTypeManagementFragment;
-import androidx.fragment.app.Fragment;
 import com.example.scsaattend.fragment.AttendanceDetailFragment;
 import com.example.scsaattend.fragment.MyAttendanceFragment;
 import com.example.scsaattend.fragment.TodayAttendanceFragment;
@@ -127,7 +126,6 @@ public class MainActivity extends AppCompatActivity {
                 getSupportActionBar().setTitle(item.getTitle());
             }
             
-            // Toast.makeText(MainActivity.this, item.getTitle() + " 선택됨", Toast.LENGTH_SHORT).show();
             drawerLayout.closeDrawer(GravityCompat.END);
             return true;
         });
