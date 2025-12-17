@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.scsaattend.R;
 import com.example.scsaattend.dto.MemberDto;
+import com.example.scsaattend.dto.MemberResponse;
 import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
 
@@ -75,12 +76,12 @@ public class UserSelectionDialogFragment extends DialogFragment {
     }
 
     private void fetchMembers(Map<Long, SelectableUser> previousSelectionMap) {
-        apiService.getMembers().enqueue(new Callback<List<MemberDto>>() {
+        apiService.getMembers().enqueue(new Callback<List<MemberResponse>>() {
             @Override
-            public void onResponse(Call<List<MemberDto>> call, Response<List<MemberDto>> response) {
+            public void onResponse(Call<List<MemberResponse>> call, Response<List<MemberResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     userList.clear();
-                    for (MemberDto member : response.body()) {
+                    for (MemberResponse member : response.body()) {
                         boolean isSelected = previousSelectionMap.containsKey(member.getId()) ?
                                 previousSelectionMap.get(member.getId()).isSelected : false;
                         userList.add(new SelectableUser(member.getId(), member.getName(), isSelected));
@@ -94,7 +95,7 @@ public class UserSelectionDialogFragment extends DialogFragment {
             }
 
             @Override
-            public void onFailure(Call<List<MemberDto>> call, Throwable t) {
+            public void onFailure(Call<List<MemberResponse>> call, Throwable t) {
                 Log.e(TAG, "Error fetching members", t);
                 Toast.makeText(getContext(), "서버와 통신할 수 없습니다.", Toast.LENGTH_SHORT).show();
             }
