@@ -47,7 +47,7 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
     private ApiService apiService;
 
     // UI 요소
-    private TextView tvCheckInStatus, tvCheckInTime, tvCheckOutStatus, tvCheckOutTime;
+    private TextView tvCheckInStatus, tvCheckInTime, tvCheckOutStatus, tvCheckOutTime, tvClassTime;
 
     private String lastScannedMacAddress = null;
     private int lastScannedRssi = 0;
@@ -63,6 +63,7 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
         tvCheckInTime = view.findViewById(R.id.tv_check_in_time);
         tvCheckOutStatus = view.findViewById(R.id.tv_check_out_status);
         tvCheckOutTime = view.findViewById(R.id.tv_check_out_time);
+        tvClassTime = view.findViewById(R.id.tv_class_time);
 
         beaconScanner = new BeaconScanner(getContext(), this);
 
@@ -279,6 +280,9 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
             String classStartTimeStr = attendance.getAttendanceType().getStartTime();
             String classEndTimeStr = attendance.getAttendanceType().getEndTime();
 
+            // 오늘의 수업 정보 업데이트
+            tvClassTime.setText("수업 시간 : " + classStartTimeStr + " ~ " + classEndTimeStr);
+
             // 출근 상태 업데이트
             if (arrivalTimeStr != null) {
                 tvCheckInTime.setText(formatTime(arrivalTimeStr));
@@ -328,6 +332,7 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
     private void updateUIAsNotEntered() {
         if (getActivity() == null) return;
         getActivity().runOnUiThread(() -> {
+            tvClassTime.setText("수업 시간 : 정보 없음");
             tvCheckInStatus.setText("미입력");
             tvCheckInTime.setText("--:--");
             tvCheckOutStatus.setText("미입력");
