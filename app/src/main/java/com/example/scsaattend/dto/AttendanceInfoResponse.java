@@ -2,7 +2,6 @@ package com.example.scsaattend.dto;
 
 import com.google.gson.annotations.SerializedName;
 
-// API 응답 리스트의 각 항목을 나타내는 클래스
 public class AttendanceInfoResponse {
 
     @SerializedName("ainfoId")
@@ -10,6 +9,9 @@ public class AttendanceInfoResponse {
 
     @SerializedName("member")
     private MemberResponse member;
+
+    @SerializedName("atype")
+    private AttendanceTypeResponse attendanceType;
 
     @SerializedName("isOff")
     private String isOff;
@@ -35,6 +37,7 @@ public class AttendanceInfoResponse {
     // Getters
     public long getAinfoId() { return ainfoId; }
     public MemberResponse getMember() { return member; }
+    public AttendanceTypeResponse getAttendanceType() { return attendanceType; }
     public String getIsOff() { return isOff; }
     public String getArrivalTime() { return arrivalTime; }
     public String getLeavingTime() { return leavingTime; }
