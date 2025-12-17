@@ -251,7 +251,7 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
             return;
         }
 
-        if (lastScannedMacAddress == null) {
+        if (Config.IS_USING_BEACON && lastScannedMacAddress == null) {
              Toast.makeText(getContext(), "비콘 스캔 정보가 없습니다. 비콘을 먼저 스캔해주세요.", Toast.LENGTH_SHORT).show();
              return;
         }
