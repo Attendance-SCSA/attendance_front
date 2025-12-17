@@ -29,8 +29,11 @@ import com.example.scsaattend.network.RetrofitClient;
 import com.example.scsaattend.network.dto.MemberRegisterRequest;
 import com.example.scsaattend.network.dto.MemberResponse;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -103,9 +106,14 @@ public class MemberManagementFragment extends Fragment {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, companies);
         spinnerCompany.setAdapter(adapter);
 
+        // 오늘 날짜 기본 설정
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        tvStartDate.setText(today);
+        tvEndDate.setText(today);
+
         // 날짜 선택 리스너 설정
-        tvStartDate.setOnClickListener(v -> showDatePicker(tvStartDate));
-        tvEndDate.setOnClickListener(v -> showDatePicker(tvEndDate));
+        tvStartDate.setOnClickListener(v -> showDatePicker(tvStartDate, null));
+        tvEndDate.setOnClickListener(v -> showDatePicker(tvEndDate, tvStartDate.getText().toString()));
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
 
@@ -151,16 +159,42 @@ public class MemberManagementFragment extends Fragment {
         dialog.show();
     }
 
-    private void showDatePicker(TextView textView) {
+    private void showDatePicker(TextView textView, String minDateString) {
         Calendar calendar = Calendar.getInstance();
+
+        // minDateString이 존재하면, 해당 날짜를 캘린더 초기값으로 설정
+        if (minDateString != null && !minDateString.isEmpty()) {
+            try {
+                Date minDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(minDateString);
+                if (minDate != null) {
+                    calendar.setTime(minDate);
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
         int day = calendar.get(Calendar.DAY_OF_MONTH);
 
-        new DatePickerDialog(requireContext(), (view, selectedYear, selectedMonth, selectedDay) -> {
+        DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(), (view, selectedYear, selectedMonth, selectedDay) -> {
             String selectedDate = String.format(Locale.getDefault(), "%04d-%02d-%02d", selectedYear, selectedMonth + 1, selectedDay);
             textView.setText(selectedDate);
-        }, year, month, day).show();
+        }, year, month, day);
+
+        if (minDateString != null && !minDateString.isEmpty()) {
+            try {
+                Date minDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(minDateString);
+                if (minDate != null) {
+                    datePickerDialog.getDatePicker().setMinDate(minDate.getTime());
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+
+        datePickerDialog.show();
     }
 
     private void loadMembers() {
@@ -206,33 +240,50 @@ public class MemberManagementFragment extends Fragment {
     private void deleteMember(MemberResponse member, int position) {
         if (currentUserId == -1) return;
 
-        new AlertDialog.Builder(requireContext())
-                .setTitle("사용자 삭제")
-                .setMessage(member.getName() + " (" + member.getLoginId() + ") 사용자를 정말 삭제하시겠습니까?")
-                .setPositiveButton("삭제", (dialog, which) -> {
-                    apiService.deleteMember(currentUserId, member.getId()).enqueue(new Callback<Void>() {
-                        @Override
-                        public void onResponse(Call<Void> call, Response<Void> response) {
-                            if (response.isSuccessful()) {
-                                Toast.makeText(getContext(), "삭제되었습니다.", Toast.LENGTH_SHORT).show();
-                                memberList.remove(position);
-                                adapter.notifyItemRemoved(position);
-                                adapter.notifyItemRangeChanged(position, memberList.size() - position);
-                                updateMemberCount();
-                            } else {
-                                Toast.makeText(getContext(), "삭제 실패: " + response.code(), Toast.LENGTH_SHORT).show();
-                            }
-                        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        LayoutInflater inflater = requireActivity().getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_delete_member, null);
+        builder.setView(dialogView);
 
-                        @Override
-                        public void onFailure(Call<Void> call, Throwable t) {
-                            Toast.makeText(getContext(), "서버 통신 오류", Toast.LENGTH_SHORT).show();
-                            Log.e(TAG, "Delete error", t);
-                        }
-                    });
-                })
-                .setNegativeButton("취소", null)
-                .show();
+        AlertDialog dialog = builder.create();
+        // 다이얼로그 배경을 투명하게 처리하여 라운드 코너가 잘 보이도록 함 (선택 사항)
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        TextView tvUserName = dialogView.findViewById(R.id.tv_delete_user_name);
+        tvUserName.setText("사용자: " + member.getName());
+
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel_delete);
+        Button btnConfirm = dialogView.findViewById(R.id.btn_confirm_delete);
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnConfirm.setOnClickListener(v -> {
+            apiService.deleteMember(currentUserId, member.getId()).enqueue(new Callback<Void>() {
+                @Override
+                public void onResponse(Call<Void> call, Response<Void> response) {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(getContext(), "삭제되었습니다.", Toast.LENGTH_SHORT).show();
+                        memberList.remove(position);
+                        adapter.notifyItemRemoved(position);
+                        adapter.notifyItemRangeChanged(position, memberList.size() - position);
+                        updateMemberCount();
+                        dialog.dismiss();
+                    } else {
+                        Toast.makeText(getContext(), "삭제 실패: " + response.code(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<Void> call, Throwable t) {
+                    Toast.makeText(getContext(), "서버 통신 오류", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Delete error", t);
+                }
+            });
+        });
+
+        dialog.show();
     }
 
     private class MemberAdapter extends RecyclerView.Adapter<MemberAdapter.ViewHolder> {
