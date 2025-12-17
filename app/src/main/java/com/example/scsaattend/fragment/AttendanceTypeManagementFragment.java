@@ -23,10 +23,14 @@ import com.example.scsaattend.dto.AttendanceTypeResponse;
 import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -132,10 +136,13 @@ public class AttendanceTypeManagementFragment extends Fragment {
                     Toast.makeText(getContext(), "새로운 출결 유형이 추가되었습니다.", Toast.LENGTH_SHORT).show();
                 } else {
                     try {
-                        String errorMessage = response.errorBody() != null ? response.errorBody().string() : "알 수 없는 오류가 발생했습니다.";
-                        Toast.makeText(getContext(), "추가 실패: " + errorMessage, Toast.LENGTH_SHORT).show();
-                    } catch (IOException e) {
-                        Log.e(TAG, "Error reading error body", e);
+                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "{\"message\": \"알 수 없는 오류\"}";
+                        JSONObject jsonObject = new JSONObject(errorBody);
+                        String errorMessage = jsonObject.getString("message");
+                        Toast.makeText(getContext(), "추가 실패: " + errorMessage, Toast.LENGTH_LONG).show();
+                    } catch (IOException | JSONException e) {
+                        Log.e(TAG, "Error parsing error body", e);
+                        Toast.makeText(getContext(), "오류 메시지를 파싱하는 데 실패했습니다.", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -147,6 +154,43 @@ public class AttendanceTypeManagementFragment extends Fragment {
             }
         });
     }
+
+    private void deleteAttendanceType(long typeId, int position) {
+        apiService.deleteAttendanceType(typeId).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    String responseBody = "";
+                    if (response.isSuccessful() && response.body() != null) {
+                        responseBody = response.body().string();
+                        typeList.remove(position);
+                        adapter.notifyItemRemoved(position);
+                        adapter.notifyItemRangeChanged(position, typeList.size());
+                    } else if (response.errorBody() != null) {
+                        responseBody = response.errorBody().string();
+                    } else {
+                        Toast.makeText(getContext(), "알 수 없는 오류가 발생했습니다.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    JSONObject jsonObject = new JSONObject(responseBody);
+                    String message = jsonObject.getString("message");
+                    Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+
+                } catch (IOException | JSONException e) {
+                    Log.e(TAG, "Error parsing response body", e);
+                    Toast.makeText(getContext(), "응답을 처리하는 데 실패했습니다.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Toast.makeText(getContext(), "서버와 통신할 수 없습니다.", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error deleting type", t);
+            }
+        });
+    }
+
 
     private class TypeAdapter extends RecyclerView.Adapter<TypeAdapter.ViewHolder> {
         private final List<AttendanceTypeResponse> types;
@@ -166,7 +210,7 @@ public class AttendanceTypeManagementFragment extends Fragment {
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             AttendanceTypeResponse item = types.get(position);
             holder.tvTypeName.setText(item.getName());
-            
+
             String startWork = item.getEarliestTime() != null && item.getEarliestTime().length() >= 5 ? item.getEarliestTime().substring(0, 5) : item.getEarliestTime();
             String startClass = item.getStartTime() != null && item.getStartTime().length() >= 5 ? item.getStartTime().substring(0, 5) : item.getStartTime();
             String endClass = item.getEndTime() != null && item.getEndTime().length() >= 5 ? item.getEndTime().substring(0, 5) : item.getEndTime();
@@ -183,7 +227,14 @@ public class AttendanceTypeManagementFragment extends Fragment {
             } else {
                 holder.btnDeleteType.setVisibility(View.VISIBLE);
                 holder.btnDeleteType.setOnClickListener(v -> {
-                    Toast.makeText(v.getContext(), item.getName() + " 유형 삭제 (기능 미구현)", Toast.LENGTH_SHORT).show();
+                    new AlertDialog.Builder(getContext())
+                            .setTitle("출결 유형 삭제")
+                            .setMessage("해당 출결 유형 삭제 시 관련된 출결 정보는 '기본' 유형으로 변경됩니다. 그래도 삭제하시겠습니까?")
+                            .setPositiveButton("삭제", (dialog, which) -> {
+                                deleteAttendanceType(item.getId(), holder.getAdapterPosition());
+                            })
+                            .setNegativeButton("취소", null)
+                            .show();
                 });
             }
         }

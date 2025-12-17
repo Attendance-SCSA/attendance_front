@@ -15,6 +15,8 @@ import com.example.scsaattend.dto.MemberResponse;
 import com.example.scsaattend.dto.MemberUpdateRequest;
 
 import java.util.List;
+
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -58,4 +60,7 @@ public interface ApiService {
 
     @POST("attendance_types")
     Call<AttendanceTypeResponse> addAttendanceType(@Body AttendanceTypeRequest request);
+
+    @DELETE("attendance_types/{typeId}")
+    Call<ResponseBody> deleteAttendanceType(@Path("typeId") long typeId);
 }
