@@ -8,9 +8,11 @@ import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
 
 public interface ApiService {
     // URL 경로 수정: BaseUrl이 '/'로 끝나게 설정할 것이므로 여기서는 '/'를 뺍니다.
@@ -19,4 +21,7 @@ public interface ApiService {
 
     @GET("members")
     Call<List<MemberResponse>> getMembers(@Header("userId") Long userId);
+
+    @DELETE("members/{memberId}")
+    Call<Void> deleteMember(@Header("userId") Long userId, @Path("memberId") Long memberId);
 }

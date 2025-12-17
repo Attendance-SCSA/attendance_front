@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -39,6 +40,7 @@ public class MemberManagementFragment extends Fragment {
     private TextView tvMemberCount;
     private Button btnAddMember;
     private ApiService apiService;
+    private long currentUserId = -1;
 
     public MemberManagementFragment() {}
 
@@ -61,6 +63,11 @@ public class MemberManagementFragment extends Fragment {
 
         apiService = RetrofitClient.getClient("http://10.10.0.76:8888").create(ApiService.class);
 
+        // 현재 로그인한 사용자 ID 가져오기
+        SharedPreferences prefs = requireActivity().getSharedPreferences("AuthPrefs", Context.MODE_PRIVATE);
+        int dbId = prefs.getInt("db_id", -1);
+        currentUserId = (long) dbId;
+
         btnAddMember.setOnClickListener(v -> {
             Toast.makeText(getContext(), "새 사용자 추가 기능은 아직 구현되지 않았습니다.", Toast.LENGTH_SHORT).show();
         });
@@ -69,19 +76,12 @@ public class MemberManagementFragment extends Fragment {
     }
 
     private void loadMembers() {
-        // SharedPreferences에서 저장된 사용자 정보 가져오기
-        SharedPreferences prefs = requireActivity().getSharedPreferences("AuthPrefs", Context.MODE_PRIVATE);
-        
-        // 로그인 시 저장한 PK(id) 값 불러오기
-        int dbId = prefs.getInt("db_id", -1);
-        long userId = (long) dbId;
-
-        if (dbId == -1) {
+        if (currentUserId == -1) {
             Toast.makeText(getContext(), "로그인 정보를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        apiService.getMembers(userId).enqueue(new Callback<List<MemberResponse>>() {
+        apiService.getMembers(currentUserId).enqueue(new Callback<List<MemberResponse>>() {
             @Override
             public void onResponse(Call<List<MemberResponse>> call, Response<List<MemberResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -115,6 +115,38 @@ public class MemberManagementFragment extends Fragment {
         tvMemberCount.setText("사용자 목록 (" + memberList.size() + "명)");
     }
 
+    private void deleteMember(MemberResponse member, int position) {
+        if (currentUserId == -1) return;
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("사용자 삭제")
+                .setMessage(member.getName() + " (" + member.getLoginId() + ") 사용자를 정말 삭제하시겠습니까?")
+                .setPositiveButton("삭제", (dialog, which) -> {
+                    apiService.deleteMember(currentUserId, member.getId()).enqueue(new Callback<Void>() {
+                        @Override
+                        public void onResponse(Call<Void> call, Response<Void> response) {
+                            if (response.isSuccessful()) {
+                                Toast.makeText(getContext(), "삭제되었습니다.", Toast.LENGTH_SHORT).show();
+                                memberList.remove(position);
+                                adapter.notifyItemRemoved(position);
+                                adapter.notifyItemRangeChanged(position, memberList.size() - position);
+                                updateMemberCount();
+                            } else {
+                                Toast.makeText(getContext(), "삭제 실패: " + response.code(), Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<Void> call, Throwable t) {
+                            Toast.makeText(getContext(), "서버 통신 오류", Toast.LENGTH_SHORT).show();
+                            Log.e(TAG, "Delete error", t);
+                        }
+                    });
+                })
+                .setNegativeButton("취소", null)
+                .show();
+    }
+
     private class MemberAdapter extends RecyclerView.Adapter<MemberAdapter.ViewHolder> {
         private final List<MemberResponse> members;
 
@@ -141,7 +173,10 @@ public class MemberManagementFragment extends Fragment {
             });
 
             holder.btnDeleteMember.setOnClickListener(v -> {
-                Toast.makeText(v.getContext(), member.getName() + "님 삭제", Toast.LENGTH_SHORT).show();
+                int currentPos = holder.getAdapterPosition();
+                if (currentPos != RecyclerView.NO_POSITION) {
+                    deleteMember(member, currentPos);
+                }
             });
         }
 
