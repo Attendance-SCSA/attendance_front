@@ -2,7 +2,7 @@ package com.example.scsaattend.dto;
 
 import com.google.gson.annotations.SerializedName;
 
-public class AttendanceTypeDto {
+public class AttendanceTypeResponse {
     @SerializedName("id")
     private long id;
 

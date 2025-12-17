@@ -1,14 +1,13 @@
 package com.example.scsaattend.network;
 
 import com.example.scsaattend.dto.AttendanceInfoResponse;
-import com.example.scsaattend.dto.AttendanceTypeDto;
+import com.example.scsaattend.dto.AttendanceTypeResponse;
 import com.example.scsaattend.dto.BatchUpdateRequest;
 import com.example.scsaattend.dto.BatchUpdateResponse;
 import com.example.scsaattend.dto.CheckInApiResponse;
 import com.example.scsaattend.dto.CheckOutRequest;
 import com.example.scsaattend.dto.LoginRequest;
 import com.example.scsaattend.dto.LoginResponse;
-import com.example.scsaattend.dto.MemberDto;
 import com.example.scsaattend.dto.SearchAttendanceRequest;
 import com.example.scsaattend.dto.MemberRegisterRequest;
 import com.example.scsaattend.dto.MemberResponse;
@@ -35,9 +34,6 @@ public interface ApiService {
     @GET("members")
     Call<List<com.example.scsaattend.dto.MemberResponse>> getMembers();
 
-    @GET("attendance_types")
-    Call<List<AttendanceTypeDto>> getAttendanceTypes();
-
     @PATCH("attendance_info")
     Call<BatchUpdateResponse> batchUpdateAttendance(@Body BatchUpdateRequest request);
 
@@ -55,4 +51,7 @@ public interface ApiService {
 
     @PATCH("members/{memberId}")
     Call<Void> updateMember(@Header("userId") Long userId, @Path("memberId") Long memberId, @Body com.example.scsaattend.dto.MemberUpdateRequest request);
+
+    @GET("attendance_types")
+    Call<List<AttendanceTypeResponse>> getAttendanceTypes();
 }

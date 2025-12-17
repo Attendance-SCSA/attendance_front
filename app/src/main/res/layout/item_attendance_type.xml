@@ -4,46 +4,68 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:padding="12dp"
-    android:gravity="center_vertical"
-    android:background="?attr/selectableItemBackground">
+    android:background="@drawable/table_cell_background"
+    android:gravity="center_vertical">
 
     <TextView
         android:id="@+id/tv_type_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1.5"
-        android:text="유형 이름" />
+        android:layout_weight="0.8"
+        android:text="기본"
+        android:gravity="center"
+        android:textColor="@android:color/black"/>
 
     <TextView
-        android:id="@+id/tv_earliest_time"
+        android:id="@+id/tv_start_work_time"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
+        android:layout_weight="1.2"
+        android:text="08:00"
         android:gravity="center"
-        android:text="08:00" />
+        android:textColor="@android:color/black"/>
 
     <TextView
-        android:id="@+id/tv_start_time"
+        android:id="@+id/tv_start_class_time"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
+        android:layout_weight="1.2"
+        android:text="09:00"
         android:gravity="center"
-        android:text="09:00" />
+        android:textColor="@android:color/black"/>
 
     <TextView
-        android:id="@+id/tv_end_time"
+        android:id="@+id/tv_end_class_time"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
+        android:layout_weight="1.2"
+        android:text="18:00"
         android:gravity="center"
-        android:text="18:00" />
+        android:textColor="@android:color/black"/>
 
     <TextView
-        android:id="@+id/tv_latest_time"
+        android:id="@+id/tv_end_work_time"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
+        android:layout_weight="1.2"
+        android:text="19:00"
         android:gravity="center"
-        android:text="19:00" />
+        android:textColor="@android:color/black"/>
+
+    <FrameLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.6">
+
+        <ImageButton
+            android:id="@+id/btn_delete_type"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:src="@android:drawable/ic_menu_delete"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:tint="#E53935"
+            android:contentDescription="삭제"/>
+    </FrameLayout>
 
 </LinearLayout>

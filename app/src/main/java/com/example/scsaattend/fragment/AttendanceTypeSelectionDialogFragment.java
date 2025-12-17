@@ -16,7 +16,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.scsaattend.R;
-import com.example.scsaattend.dto.AttendanceTypeDto;
+import com.example.scsaattend.dto.AttendanceTypeResponse;
+import com.example.scsaattend.dto.AttendanceTypeResponse;
 import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
 
@@ -32,7 +33,7 @@ public class AttendanceTypeSelectionDialogFragment extends DialogFragment {
     private static final String TAG = "AttendanceTypeDialog";
     private RecyclerView rvAttendanceTypes;
     private AttendanceTypeAdapter adapter;
-    private List<AttendanceTypeDto> typeList = new ArrayList<>();
+    private List<AttendanceTypeResponse> typeList = new ArrayList<>();
     private ApiService apiService;
 
     public interface OnAttendanceTypeSelectedListener {
@@ -86,9 +87,9 @@ public class AttendanceTypeSelectionDialogFragment extends DialogFragment {
     }
 
     private void fetchAttendanceTypes() {
-        apiService.getAttendanceTypes().enqueue(new Callback<List<AttendanceTypeDto>>() {
+        apiService.getAttendanceTypes().enqueue(new Callback<List<AttendanceTypeResponse>>() {
             @Override
-            public void onResponse(Call<List<AttendanceTypeDto>> call, Response<List<AttendanceTypeDto>> response) {
+            public void onResponse(Call<List<AttendanceTypeResponse>> call, Response<List<AttendanceTypeResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     typeList.clear();
                     typeList.addAll(response.body());
@@ -100,7 +101,7 @@ public class AttendanceTypeSelectionDialogFragment extends DialogFragment {
             }
 
             @Override
-            public void onFailure(Call<List<AttendanceTypeDto>> call, Throwable t) {
+            public void onFailure(Call<List<AttendanceTypeResponse>> call, Throwable t) {
                 Toast.makeText(getContext(), "서버와 통신할 수 없습니다.", Toast.LENGTH_SHORT).show();
                 Log.e(TAG, "Error fetching types", t);
             }
@@ -108,9 +109,9 @@ public class AttendanceTypeSelectionDialogFragment extends DialogFragment {
     }
 
     private class AttendanceTypeAdapter extends RecyclerView.Adapter<AttendanceTypeAdapter.ViewHolder> {
-        private List<AttendanceTypeDto> items;
+        private List<AttendanceTypeResponse> items;
 
-        public AttendanceTypeAdapter(List<AttendanceTypeDto> items) {
+        public AttendanceTypeAdapter(List<AttendanceTypeResponse> items) {
             this.items = items;
         }
 
@@ -123,12 +124,12 @@ public class AttendanceTypeSelectionDialogFragment extends DialogFragment {
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            AttendanceTypeDto item = items.get(position);
+            AttendanceTypeResponse item = items.get(position);
             holder.tvTypeName.setText(item.getName());
-            holder.tvEarliestTime.setText(item.getEarliestTime().substring(0, 5));
-            holder.tvStartTime.setText(item.getStartTime().substring(0, 5));
-            holder.tvEndTime.setText(item.getEndTime().substring(0, 5));
-            holder.tvLatestTime.setText(item.getLatestTime().substring(0, 5));
+            holder.tvStartWork.setText(item.getEarliestTime().substring(0, 5));
+            holder.tvStartClass.setText(item.getStartTime().substring(0, 5));
+            holder.tvEndClass.setText(item.getEndTime().substring(0, 5));
+            holder.tvEndWork.setText(item.getLatestTime().substring(0, 5));
 
             holder.itemView.setOnClickListener(v -> {
                 if (listener != null) {
@@ -144,15 +145,15 @@ public class AttendanceTypeSelectionDialogFragment extends DialogFragment {
         }
 
         class ViewHolder extends RecyclerView.ViewHolder {
-            TextView tvTypeName, tvEarliestTime, tvStartTime, tvEndTime, tvLatestTime;
+            TextView tvTypeName, tvStartWork, tvStartClass, tvEndClass, tvEndWork;
 
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
                 tvTypeName = itemView.findViewById(R.id.tv_type_name);
-                tvEarliestTime = itemView.findViewById(R.id.tv_earliest_time);
-                tvStartTime = itemView.findViewById(R.id.tv_start_time);
-                tvEndTime = itemView.findViewById(R.id.tv_end_time);
-                tvLatestTime = itemView.findViewById(R.id.tv_latest_time);
+                tvStartWork = itemView.findViewById(R.id.tv_start_work_time);
+                tvStartClass = itemView.findViewById(R.id.tv_start_class_time);
+                tvEndClass = itemView.findViewById(R.id.tv_end_class_time);
+                tvEndWork = itemView.findViewById(R.id.tv_end_work_time);
             }
         }
     }
