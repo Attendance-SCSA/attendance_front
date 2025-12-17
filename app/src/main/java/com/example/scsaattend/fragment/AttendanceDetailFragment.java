@@ -303,13 +303,12 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
                 .map(u -> u.id)
                 .collect(Collectors.toList());
 
-        // 사용자가 선택되지 않았으면 전체 사용자를 대상으로 함
         if (selectedMemberIds.isEmpty() && !userList.isEmpty()) {
             selectedMemberIds = userList.stream().map(u -> u.id).collect(Collectors.toList());
         }
         
         if (selectedMemberIds.isEmpty()) {
-             Toast.makeText(getContext(), "조회할 사용자가 없습니다.", Toast.LENGTH_SHORT).show();
+             Toast.makeText(getContext(), "조회할 학생이 없습니다.", Toast.LENGTH_SHORT).show();
              return;
         }
 
@@ -413,9 +412,9 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
     private void updateUserSelectionButtonText() {
         long selectedCount = userList.stream().filter(u -> u.isSelected).count();
         if (selectedCount == userList.size() || selectedCount == 0) {
-            btnUserSelect.setText("사용자 선택: 전체");
+            btnUserSelect.setText("학생 선택: 전체");
         } else {
-            btnUserSelect.setText("사용자 선택: " + selectedCount + "명");
+            btnUserSelect.setText("학생 선택: " + selectedCount + "명");
         }
     }
     
