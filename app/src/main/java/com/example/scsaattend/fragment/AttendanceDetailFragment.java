@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -39,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -50,7 +52,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class AttendanceDetailFragment extends Fragment implements UserSelectionDialogFragment.OnUsersSelectedListener, BatchUpdateDialogFragment.OnUpdateListener {
+public class AttendanceDetailFragment extends Fragment implements UserSelectionDialogFragment.OnUsersSelectedListener, BatchUpdateDialogFragment.OnUpdateListener, AttendanceTypeSelectionDialogFragment.OnAttendanceTypeSelectedListener {
 
     private static final String TAG = "AttendanceDetailFrag";
     private Button btnStartDate, btnEndDate, btnUserSelect, btnQuery;
@@ -117,9 +119,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
                 Toast.makeText(getContext(), "변경할 항목을 선택해주세요.", Toast.LENGTH_SHORT).show();
                 return;
             }
-            BatchUpdateDialogFragment dialog = BatchUpdateDialogFragment.newInstance();
-            dialog.setOnUpdateListener(this);
-            dialog.show(getParentFragmentManager(), "BatchUpdateDialog");
+            showBatchChangeOptions();
         });
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -128,6 +128,45 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
 
         updateUserSelectionButtonText();
         updateRecordCount();
+    }
+
+    private void showBatchChangeOptions() {
+        final CharSequence[] options = {"출결 자동 결정", "출결 유형 변경", "휴일 여부 변경"};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("일괄 변경 작업 선택");
+        builder.setItems(options, (dialog, which) -> {
+            switch (which) {
+                case 0:
+                    Toast.makeText(getContext(), "출결 자동 결정 기능은 아직 구현되지 않았습니다.", Toast.LENGTH_SHORT).show();
+                    break;
+                case 1:
+                    AttendanceTypeSelectionDialogFragment typeDialog = AttendanceTypeSelectionDialogFragment.newInstance();
+                    typeDialog.setOnAttendanceTypeSelectedListener(AttendanceDetailFragment.this);
+                    typeDialog.show(getParentFragmentManager(), "AttendanceTypeSelectionDialog");
+                    break;
+                case 2:
+                    showIsOffSelectionDialog();
+                    break;
+            }
+        });
+        builder.show();
+    }
+
+    private void showIsOffSelectionDialog() {
+        final CharSequence[] isOffOptions = {"휴일", "수업일"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("휴일 여부 변경");
+        builder.setItems(isOffOptions, (dialog, which) -> {
+            Map<String, Object> updateData = new HashMap<>();
+            if (which == 0) { // 휴일
+                updateData.put("isOff", "Y");
+            } else { // 수업일
+                updateData.put("isOff", "N");
+            }
+            onUpdate(updateData);
+        });
+        builder.show();
     }
 
     private void toggleFilterVisibility() {
@@ -248,6 +287,18 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
     public void onUsersSelected(ArrayList<SelectableUser> selectedUsers) {
         this.userList = selectedUsers;
         updateUserSelectionButtonText();
+    }
+
+    @Override
+    public void onAttendanceTypeSelected(long typeId, String typeName) {
+        Map<String, Object> updateData = new HashMap<>();
+        updateData.put("aTypeId", typeId);
+        updateData.put("arrivalTime", null);
+        updateData.put("leavingTime", null);
+        updateData.put("status", null);
+        updateData.put("isApproved", null);
+        updateData.put("isOfficial", null);
+        onUpdate(updateData);
     }
     
     @Override
