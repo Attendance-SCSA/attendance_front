@@ -220,6 +220,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
                                 res.getAinfoId(),
                                 res.getADate().substring(5),
                                 res.getMember().getName(),
+                                res.getIsOff(),
                                 res.getArrivalTime(),
                                 res.getLeavingTime(),
                                 res.getStatus(),
@@ -340,12 +341,13 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
 
     private static class AttendanceDetailItem {
         long aInfoId;
-        String date, name, checkIn, checkOut, status, approval, publicLeave;
+        String date, name, isOff, checkIn, checkOut, status, approval, publicLeave;
 
-        public AttendanceDetailItem(long aInfoId, String date, String name, String checkIn, String checkOut, String status, String approval, String publicLeave) {
+        public AttendanceDetailItem(long aInfoId, String date, String name, String isOff, String checkIn, String checkOut, String status, String approval, String publicLeave) {
             this.aInfoId = aInfoId;
             this.date = date;
             this.name = name;
+            this.isOff = isOff;
             this.checkIn = checkIn;
             this.checkOut = checkOut;
             this.status = status;
@@ -427,38 +429,49 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
             public void bind(AttendanceDetailItem item) {
                 tvDate.setText(item.date);
                 tvName.setText(item.name);
-                tvCheckIn.setText(fragment.formatTime(item.checkIn));
-                tvCheckOut.setText(fragment.formatTime(item.checkOut));
-                tvPublicLeave.setText(item.publicLeave != null ? item.publicLeave : "-");
 
-                String status = item.status != null ? item.status : "";
-                switch (status) {
-                    case "normal":
-                        tvStatus.setText("출석");
-                        tvStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.status_text_normal));
-                        break;
-                    case "late/early":
-                        tvStatus.setText("지각/조퇴");
-                        tvStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.status_text_late_early));
-                        break;
-                    case "absent":
-                        tvStatus.setText("결석");
-                        tvStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.status_text_absent));
-                        break;
-                    default:
-                        tvStatus.setText("-");
-                        tvStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), android.R.color.black));
-                        break;
-                }
-                
-                String approval = item.approval != null ? item.approval : "";
-                tvApproval.setBackground(null);
-                if ("approved".equalsIgnoreCase(approval)) {
-                    tvApproval.setText("승인");
-                } else if ("denied".equalsIgnoreCase(approval)) {
-                    tvApproval.setText("불허");
-                } else {
+                if ("Y".equals(item.isOff)) {
+                    tvStatus.setText("휴일");
+                    tvStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), android.R.color.black));
+                    tvCheckIn.setText("-");
+                    tvCheckOut.setText("-");
                     tvApproval.setText("-");
+                    tvPublicLeave.setText("-");
+                    tvApproval.setBackground(null);
+                } else {
+                    tvCheckIn.setText(fragment.formatTime(item.checkIn));
+                    tvCheckOut.setText(fragment.formatTime(item.checkOut));
+                    tvPublicLeave.setText(item.publicLeave != null ? item.publicLeave : "-");
+
+                    String status = item.status != null ? item.status : "";
+                    switch (status) {
+                        case "normal":
+                            tvStatus.setText("출석");
+                            tvStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.status_text_normal));
+                            break;
+                        case "late/early":
+                            tvStatus.setText("지각/조퇴");
+                            tvStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.status_text_late_early));
+                            break;
+                        case "absent":
+                            tvStatus.setText("결석");
+                            tvStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.status_text_absent));
+                            break;
+                        default:
+                            tvStatus.setText("-");
+                            tvStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), android.R.color.black));
+                            break;
+                    }
+
+                    String approval = item.approval != null ? item.approval : "";
+                    tvApproval.setBackground(null);
+                    if ("approved".equalsIgnoreCase(approval)) {
+                        tvApproval.setText("승인");
+                    } else if ("denied".equalsIgnoreCase(approval)) {
+                        tvApproval.setText("불허");
+                    } else {
+                        tvApproval.setText("-");
+                    }
                 }
             }
         }

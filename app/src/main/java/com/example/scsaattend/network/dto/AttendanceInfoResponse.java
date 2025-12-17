@@ -11,6 +11,9 @@ public class AttendanceInfoResponse {
     @SerializedName("member")
     private MemberDto member;
 
+    @SerializedName("isOff")
+    private String isOff;
+
     @SerializedName("arrivalTime")
     private String arrivalTime;
 
@@ -21,7 +24,7 @@ public class AttendanceInfoResponse {
     private String status;
 
     @SerializedName("isApproved")
-    private String isApproved; // "denied" 등의 문자열이 올 수 있으므로 String
+    private String isApproved;
 
     @SerializedName("isOfficial")
     private String isOfficial;
@@ -32,6 +35,7 @@ public class AttendanceInfoResponse {
     // Getters
     public long getAinfoId() { return ainfoId; }
     public MemberDto getMember() { return member; }
+    public String getIsOff() { return isOff; }
     public String getArrivalTime() { return arrivalTime; }
     public String getLeavingTime() { return leavingTime; }
     public String getStatus() { return status; }
