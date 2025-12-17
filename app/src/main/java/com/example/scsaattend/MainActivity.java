@@ -15,6 +15,9 @@ import androidx.core.view.GravityCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+
+import com.example.scsaattend.fragment.MemberManagementFragment;
 import com.google.android.material.navigation.NavigationView;
 
 public class MainActivity extends AppCompatActivity {
@@ -86,13 +89,28 @@ public class MainActivity extends AppCompatActivity {
         // 메뉴 아이템 클릭 리스너 설정
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
+            Fragment fragment = null;
+
+            if (id == R.id.nav_admin_detail) { // '출결 상세' 메뉴 아이템 ID
+                // fragment = new AttendanceDetailFragment();
+                Toast.makeText(MainActivity.this, "파일이 누락되어 실행할 수 없습니다.", Toast.LENGTH_SHORT).show();
+            } else if (id == R.id.nav_admin_member) { // '회원 관리' 메뉴 아이템 ID
+                fragment = new MemberManagementFragment();
+            } else {
+                Toast.makeText(MainActivity.this, item.getTitle() + " 선택됨", Toast.LENGTH_SHORT).show();
+            }
+
+            if (fragment != null) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, fragment)
+                        .commit();
+            }
             
             // 툴바 제목을 클릭한 메뉴의 이름으로 변경
             if (getSupportActionBar() != null) {
                 getSupportActionBar().setTitle(item.getTitle());
             }
             
-            Toast.makeText(MainActivity.this, item.getTitle() + " 선택됨", Toast.LENGTH_SHORT).show();
             drawerLayout.closeDrawer(GravityCompat.END);
             return true;
         });
@@ -104,13 +122,6 @@ public class MainActivity extends AppCompatActivity {
 
         if(navHeaderTitle != null) navHeaderTitle.setText(userName); // 사용자 이름
         if(navHeaderSubtitle != null) navHeaderSubtitle.setText(displayRole); // ROLE_ADMIN -> 관리자
-
-        // 헤더 클릭 시 정보 출력 (필요 시 주석 해제)
-        /*
-        headerView.setOnClickListener(v -> {
-            Toast.makeText(MainActivity.this, "이름: " + userName + "\nRole: " + displayRole, Toast.LENGTH_LONG).show();
-        });
-        */
     }
 
     @Override

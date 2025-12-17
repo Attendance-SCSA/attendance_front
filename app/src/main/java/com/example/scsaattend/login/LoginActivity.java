@@ -33,7 +33,7 @@ public class LoginActivity extends AppCompatActivity {
 
         // 안드로이드 에뮬레이터에서 localhost 접속 시 10.0.2.2 사용
         // 만약 실제 기기라면 실행 중인 PC의 IP 주소(예: 192.168.x.x)를 입력해야 합니다.
-        apiService = RetrofitClient.getClient("http://10.10.0.56:8888").create(ApiService.class);
+        apiService = RetrofitClient.getClient("http://10.10.0.76:8888").create(ApiService.class);
 
         EditText idInput = findViewById(R.id.idInput);
         EditText passwordInput = findViewById(R.id.passwordInput);
@@ -71,7 +71,10 @@ public class LoginActivity extends AppCompatActivity {
                             SharedPreferences prefs = getSharedPreferences("AuthPrefs", MODE_PRIVATE);
                             SharedPreferences.Editor editor = prefs.edit();
                             editor.putString("user_role", appRole);
+                            // 사용자 구분용 loginId 저장
                             editor.putString("user_id", loginResponse.getLoginId());
+                            // 서버 DB의 PK(id) 저장 (관리자 체크용으로 사용될 수 있음)
+                            editor.putInt("db_id", loginResponse.getId());
                             // 사용자 이름(name) 저장
                             editor.putString("user_name", loginResponse.getName());
                             editor.apply();
