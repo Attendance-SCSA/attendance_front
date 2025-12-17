@@ -2,6 +2,7 @@ package com.example.scsaattend.network;
 
 import com.example.scsaattend.network.dto.LoginRequest;
 import com.example.scsaattend.network.dto.LoginResponse;
+import com.example.scsaattend.network.dto.MemberRegisterRequest;
 import com.example.scsaattend.network.dto.MemberResponse;
 
 import java.util.List;
@@ -21,6 +22,9 @@ public interface ApiService {
 
     @GET("members")
     Call<List<MemberResponse>> getMembers(@Header("userId") Long userId);
+
+    @POST("members")
+    Call<Void> registerMember(@Header("userId") Long userId, @Body MemberRegisterRequest request);
 
     @DELETE("members/{memberId}")
     Call<Void> deleteMember(@Header("userId") Long userId, @Path("memberId") Long memberId);

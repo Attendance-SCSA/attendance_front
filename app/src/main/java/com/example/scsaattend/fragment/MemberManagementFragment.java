@@ -1,5 +1,6 @@
 package com.example.scsaattend.fragment;
 
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -7,8 +8,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,10 +26,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.scsaattend.R;
 import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
+import com.example.scsaattend.network.dto.MemberRegisterRequest;
 import com.example.scsaattend.network.dto.MemberResponse;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -68,11 +75,92 @@ public class MemberManagementFragment extends Fragment {
         int dbId = prefs.getInt("db_id", -1);
         currentUserId = (long) dbId;
 
-        btnAddMember.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "새 사용자 추가 기능은 아직 구현되지 않았습니다.", Toast.LENGTH_SHORT).show();
-        });
+        btnAddMember.setOnClickListener(v -> showAddMemberDialog());
 
         loadMembers();
+    }
+
+    private void showAddMemberDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        LayoutInflater inflater = requireActivity().getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_add_member, null);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+
+        EditText etName = dialogView.findViewById(R.id.et_name);
+        EditText etId = dialogView.findViewById(R.id.et_id);
+        EditText etPassword = dialogView.findViewById(R.id.et_password);
+        EditText etPasswordConfirm = dialogView.findViewById(R.id.et_password_confirm);
+        Spinner spinnerCompany = dialogView.findViewById(R.id.spinner_company);
+        TextView tvStartDate = dialogView.findViewById(R.id.tv_start_date);
+        TextView tvEndDate = dialogView.findViewById(R.id.tv_end_date);
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel);
+        Button btnSubmit = dialogView.findViewById(R.id.btn_submit_add);
+
+        // 회사 목록 스피너 설정
+        String[] companies = {"DS", "DX", "SDS"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, companies);
+        spinnerCompany.setAdapter(adapter);
+
+        // 날짜 선택 리스너 설정
+        tvStartDate.setOnClickListener(v -> showDatePicker(tvStartDate));
+        tvEndDate.setOnClickListener(v -> showDatePicker(tvEndDate));
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnSubmit.setOnClickListener(v -> {
+            String name = etName.getText().toString().trim();
+            String id = etId.getText().toString().trim();
+            String password = etPassword.getText().toString().trim();
+            String passwordConfirm = etPasswordConfirm.getText().toString().trim();
+            String company = spinnerCompany.getSelectedItem().toString();
+            String startDay = tvStartDate.getText().toString().trim();
+            String endDay = tvEndDate.getText().toString().trim();
+
+            if (name.isEmpty() || id.isEmpty() || password.isEmpty() || company.isEmpty() || startDay.isEmpty() || endDay.isEmpty()) {
+                Toast.makeText(getContext(), "모든 필드를 입력해주세요.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (!password.equals(passwordConfirm)) {
+                Toast.makeText(getContext(), "비밀번호가 일치하지 않습니다.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            MemberRegisterRequest request = new MemberRegisterRequest(name, id, password, company, startDay, endDay);
+            apiService.registerMember(currentUserId, request).enqueue(new Callback<Void>() {
+                @Override
+                public void onResponse(Call<Void> call, Response<Void> response) {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(getContext(), "사용자가 추가되었습니다.", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                        loadMembers(); // 목록 갱신
+                    } else {
+                        Toast.makeText(getContext(), "추가 실패: " + response.code(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<Void> call, Throwable t) {
+                    Toast.makeText(getContext(), "서버 오류: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+
+        dialog.show();
+    }
+
+    private void showDatePicker(TextView textView) {
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        new DatePickerDialog(requireContext(), (view, selectedYear, selectedMonth, selectedDay) -> {
+            String selectedDate = String.format(Locale.getDefault(), "%04d-%02d-%02d", selectedYear, selectedMonth + 1, selectedDay);
+            textView.setText(selectedDate);
+        }, year, month, day).show();
     }
 
     private void loadMembers() {
