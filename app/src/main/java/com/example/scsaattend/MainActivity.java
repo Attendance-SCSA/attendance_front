@@ -20,6 +20,7 @@ import androidx.fragment.app.Fragment;
 import com.example.scsaattend.fragment.MemberManagementFragment;
 import androidx.fragment.app.Fragment;
 import com.example.scsaattend.fragment.AttendanceDetailFragment;
+import com.example.scsaattend.fragment.MyAttendanceFragment;
 import com.example.scsaattend.fragment.TodayAttendanceFragment;
 import com.google.android.material.navigation.NavigationView;
 
@@ -106,6 +107,8 @@ public class MainActivity extends AppCompatActivity {
                 fragment = new AttendanceDetailFragment();
             } else if (id == R.id.nav_user_today) {
                 fragment = new TodayAttendanceFragment();
+            } else if (id == R.id.nav_user_my_status) {
+                fragment = new MyAttendanceFragment();
             } else if (id == R.id.nav_admin_member) {
                 fragment = new MemberManagementFragment();
             } else {
