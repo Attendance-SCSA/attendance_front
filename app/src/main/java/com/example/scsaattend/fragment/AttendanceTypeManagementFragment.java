@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,7 +29,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -43,6 +46,9 @@ public class AttendanceTypeManagementFragment extends Fragment {
     private List<AttendanceTypeResponse> typeList = new ArrayList<>();
     private Button btnAddType;
     private ApiService apiService;
+
+    // 시간 저장을 위한 멤버 변수
+    private String earliestTime, startTime, endTime, latestTime;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -77,14 +83,12 @@ public class AttendanceTypeManagementFragment extends Fragment {
                     adapter.notifyDataSetChanged();
                 } else {
                     Toast.makeText(getContext(), "유형 목록을 불러오지 못했습니다.", Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "Failed to fetch types: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(Call<List<AttendanceTypeResponse>> call, Throwable t) {
                 Toast.makeText(getContext(), "서버와 통신할 수 없습니다.", Toast.LENGTH_SHORT).show();
-                Log.e(TAG, "Error fetching types", t);
             }
         });
     }
@@ -96,34 +100,89 @@ public class AttendanceTypeManagementFragment extends Fragment {
         builder.setView(dialogView);
 
         final EditText etTypeName = dialogView.findViewById(R.id.et_type_name);
-        final EditText etEarliestTime = dialogView.findViewById(R.id.et_earliest_time);
-        final EditText etStartTime = dialogView.findViewById(R.id.et_start_time);
-        final EditText etEndTime = dialogView.findViewById(R.id.et_end_time);
-        final EditText etLatestTime = dialogView.findViewById(R.id.et_latest_time);
+        final TextView tvEarliestTime = dialogView.findViewById(R.id.tv_earliest_time);
+        final TextView tvStartTime = dialogView.findViewById(R.id.tv_start_time);
+        final TextView tvEndTime = dialogView.findViewById(R.id.tv_end_time);
+        final TextView tvLatestTime = dialogView.findViewById(R.id.tv_latest_time);
         Button btnCancel = dialogView.findViewById(R.id.btn_cancel_add);
         Button btnConfirm = dialogView.findViewById(R.id.btn_confirm_add);
+
+        // 시간 변수 초기화
+        earliestTime = null;
+        startTime = null;
+        endTime = null;
+        latestTime = null;
+
+        tvEarliestTime.setOnClickListener(v -> showCustomTimePicker(time -> {
+            earliestTime = time;
+            tvEarliestTime.setText(earliestTime);
+        }));
+        tvStartTime.setOnClickListener(v -> showCustomTimePicker(time -> {
+            startTime = time;
+            tvStartTime.setText(startTime);
+        }));
+        tvEndTime.setOnClickListener(v -> showCustomTimePicker(time -> {
+            endTime = time;
+            tvEndTime.setText(endTime);
+        }));
+        tvLatestTime.setOnClickListener(v -> showCustomTimePicker(time -> {
+            latestTime = time;
+            tvLatestTime.setText(latestTime);
+        }));
 
         AlertDialog dialog = builder.create();
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
         btnConfirm.setOnClickListener(v -> {
             String name = etTypeName.getText().toString();
-            String earliest = etEarliestTime.getText().toString();
-            String start = etStartTime.getText().toString();
-            String end = etEndTime.getText().toString();
-            String latest = etLatestTime.getText().toString();
 
-            if (name.isEmpty() || earliest.isEmpty() || start.isEmpty() || end.isEmpty() || latest.isEmpty()) {
+            if (name.isEmpty() || earliestTime == null || startTime == null || endTime == null || latestTime == null) {
                 Toast.makeText(getContext(), "모든 필드를 입력해주세요.", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            AttendanceTypeRequest request = new AttendanceTypeRequest(name, earliest, start, end, latest);
+            AttendanceTypeRequest request = new AttendanceTypeRequest(name, earliestTime, startTime, endTime, latestTime);
             addAttendanceType(request);
             dialog.dismiss();
         });
 
         dialog.show();
+    }
+
+    private void showCustomTimePicker(OnTimeSelectedListener listener) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        LayoutInflater inflater = requireActivity().getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_custom_time_picker, null);
+        builder.setView(dialogView);
+
+        NumberPicker hourPicker = dialogView.findViewById(R.id.picker_hour);
+        NumberPicker minutePicker = dialogView.findViewById(R.id.picker_minute);
+        NumberPicker secondPicker = dialogView.findViewById(R.id.picker_second);
+
+        hourPicker.setMinValue(0);
+        hourPicker.setMaxValue(23);
+        minutePicker.setMinValue(0);
+        minutePicker.setMaxValue(59);
+        secondPicker.setMinValue(0);
+        secondPicker.setMaxValue(59);
+
+        Calendar c = Calendar.getInstance();
+        hourPicker.setValue(c.get(Calendar.HOUR_OF_DAY));
+        minutePicker.setValue(c.get(Calendar.MINUTE));
+        secondPicker.setValue(c.get(Calendar.SECOND));
+
+        builder.setTitle("시간 선택");
+        builder.setPositiveButton("확인", (dialog, which) -> {
+            String formattedTime = String.format(Locale.getDefault(), "%02d:%02d:%02d", hourPicker.getValue(), minutePicker.getValue(), secondPicker.getValue());
+            listener.onTimeSelected(formattedTime);
+        });
+        builder.setNegativeButton("취소", (dialog, which) -> dialog.cancel());
+
+        builder.create().show();
+    }
+
+    interface OnTimeSelectedListener {
+        void onTimeSelected(String time);
     }
 
     private void addAttendanceType(AttendanceTypeRequest request) {
@@ -141,7 +200,6 @@ public class AttendanceTypeManagementFragment extends Fragment {
                         String errorMessage = jsonObject.getString("message");
                         Toast.makeText(getContext(), "추가 실패: " + errorMessage, Toast.LENGTH_LONG).show();
                     } catch (IOException | JSONException e) {
-                        Log.e(TAG, "Error parsing error body", e);
                         Toast.makeText(getContext(), "오류 메시지를 파싱하는 데 실패했습니다.", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -150,7 +208,6 @@ public class AttendanceTypeManagementFragment extends Fragment {
             @Override
             public void onFailure(Call<AttendanceTypeResponse> call, Throwable t) {
                 Toast.makeText(getContext(), "서버와 통신할 수 없습니다.", Toast.LENGTH_SHORT).show();
-                Log.e(TAG, "Error adding type", t);
             }
         });
     }
@@ -178,7 +235,6 @@ public class AttendanceTypeManagementFragment extends Fragment {
                     Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
 
                 } catch (IOException | JSONException e) {
-                    Log.e(TAG, "Error parsing response body", e);
                     Toast.makeText(getContext(), "응답을 처리하는 데 실패했습니다.", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -186,7 +242,6 @@ public class AttendanceTypeManagementFragment extends Fragment {
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 Toast.makeText(getContext(), "서버와 통신할 수 없습니다.", Toast.LENGTH_SHORT).show();
-                Log.e(TAG, "Error deleting type", t);
             }
         });
     }

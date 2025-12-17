@@ -9,40 +9,48 @@
         android:id="@+id/et_type_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="유형 이름 (예: 단축 수업)"
+        android:hint="유형 이름"
         android:inputType="text"/>
 
-    <EditText
-        android:id="@+id/et_earliest_time"
+    <TextView
+        android:id="@+id/tv_earliest_time"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:hint="출근 시작 시간 (HH:mm:ss)"
-        android:inputType="time"/>
+        android:text="출근 시작 시간 선택"
+        android:textSize="18sp"
+        android:padding="12dp"
+        android:background="?attr/selectableItemBackground"/>
 
-    <EditText
-        android:id="@+id/et_start_time"
+    <TextView
+        android:id="@+id/tv_start_time"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:hint="수업 시작 시간 (HH:mm:ss)"
-        android:inputType="time"/>
+        android:text="수업 시작 시간 선택"
+        android:textSize="18sp"
+        android:padding="12dp"
+        android:background="?attr/selectableItemBackground"/>
 
-    <EditText
-        android:id="@+id/et_end_time"
+    <TextView
+        android:id="@+id/tv_end_time"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:hint="수업 종료 시간 (HH:mm:ss)"
-        android:inputType="time"/>
+        android:text="수업 종료 시간 선택"
+        android:textSize="18sp"
+        android:padding="12dp"
+        android:background="?attr/selectableItemBackground"/>
 
-    <EditText
-        android:id="@+id/et_latest_time"
+    <TextView
+        android:id="@+id/tv_latest_time"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:hint="퇴근 마감 시간 (HH:mm:ss)"
-        android:inputType="time"/>
+        android:text="퇴근 마감 시간 선택"
+        android:textSize="18sp"
+        android:padding="12dp"
+        android:background="?attr/selectableItemBackground"/>
 
     <LinearLayout
         android:layout_width="match_parent"
