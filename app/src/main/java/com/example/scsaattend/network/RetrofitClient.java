@@ -15,7 +15,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
 
-    public static final String BASE_URL = "http://10.10.0.125:8888"; // Corrected IP
+    public static final String BASE_URL = "http://10.10.0.76:8888"; // Corrected IP
     private static Retrofit retrofit = null;
     private static Context appContext;
 

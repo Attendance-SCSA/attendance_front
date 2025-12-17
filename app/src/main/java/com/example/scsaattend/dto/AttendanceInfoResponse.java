@@ -9,7 +9,7 @@ public class AttendanceInfoResponse {
     private long ainfoId;
 
     @SerializedName("member")
-    private MemberDto member;
+    private MemberResponse member;
 
     @SerializedName("isOff")
     private String isOff;
@@ -34,7 +34,7 @@ public class AttendanceInfoResponse {
 
     // Getters
     public long getAinfoId() { return ainfoId; }
-    public MemberDto getMember() { return member; }
+    public MemberResponse getMember() { return member; }
     public String getIsOff() { return isOff; }
     public String getArrivalTime() { return arrivalTime; }
     public String getLeavingTime() { return leavingTime; }
