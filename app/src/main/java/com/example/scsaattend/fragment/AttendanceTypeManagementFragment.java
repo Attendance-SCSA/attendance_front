@@ -1,11 +1,13 @@
 package com.example.scsaattend.fragment;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,10 +18,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.scsaattend.R;
+import com.example.scsaattend.dto.AttendanceTypeRequest;
 import com.example.scsaattend.dto.AttendanceTypeResponse;
 import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,8 +37,7 @@ public class AttendanceTypeManagementFragment extends Fragment {
     private RecyclerView recyclerView;
     private TypeAdapter adapter;
     private List<AttendanceTypeResponse> typeList = new ArrayList<>();
-    private TextView btnAddType;
-    private Button btnCancel, btnSubmitChange;
+    private Button btnAddType;
     private ApiService apiService;
 
     @Override
@@ -48,8 +51,6 @@ public class AttendanceTypeManagementFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.recycler_view_types);
         btnAddType = view.findViewById(R.id.btn_add_type);
-        btnCancel = view.findViewById(R.id.btn_cancel);
-        btnSubmitChange = view.findViewById(R.id.btn_submit_change_type);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new TypeAdapter(typeList);
@@ -57,19 +58,7 @@ public class AttendanceTypeManagementFragment extends Fragment {
 
         apiService = RetrofitClient.getClient().create(ApiService.class);
 
-        btnAddType.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "출근 유형 추가 기능은 아직 구현되지 않았습니다.", Toast.LENGTH_SHORT).show();
-        });
-        
-        btnCancel.setOnClickListener(v -> {
-             if (getParentFragmentManager().getBackStackEntryCount() > 0) {
-                 getParentFragmentManager().popBackStack();
-             }
-        });
-
-        btnSubmitChange.setOnClickListener(v -> {
-             Toast.makeText(getContext(), "출결 타입 변경 완료", Toast.LENGTH_SHORT).show();
-        });
+        btnAddType.setOnClickListener(v -> showAddTypeDialog());
 
         fetchAttendanceTypes();
     }
@@ -96,6 +85,69 @@ public class AttendanceTypeManagementFragment extends Fragment {
         });
     }
 
+    private void showAddTypeDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        LayoutInflater inflater = requireActivity().getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_add_attendance_type, null);
+        builder.setView(dialogView);
+
+        final EditText etTypeName = dialogView.findViewById(R.id.et_type_name);
+        final EditText etEarliestTime = dialogView.findViewById(R.id.et_earliest_time);
+        final EditText etStartTime = dialogView.findViewById(R.id.et_start_time);
+        final EditText etEndTime = dialogView.findViewById(R.id.et_end_time);
+        final EditText etLatestTime = dialogView.findViewById(R.id.et_latest_time);
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel_add);
+        Button btnConfirm = dialogView.findViewById(R.id.btn_confirm_add);
+
+        AlertDialog dialog = builder.create();
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        btnConfirm.setOnClickListener(v -> {
+            String name = etTypeName.getText().toString();
+            String earliest = etEarliestTime.getText().toString();
+            String start = etStartTime.getText().toString();
+            String end = etEndTime.getText().toString();
+            String latest = etLatestTime.getText().toString();
+
+            if (name.isEmpty() || earliest.isEmpty() || start.isEmpty() || end.isEmpty() || latest.isEmpty()) {
+                Toast.makeText(getContext(), "모든 필드를 입력해주세요.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            AttendanceTypeRequest request = new AttendanceTypeRequest(name, earliest, start, end, latest);
+            addAttendanceType(request);
+            dialog.dismiss();
+        });
+
+        dialog.show();
+    }
+
+    private void addAttendanceType(AttendanceTypeRequest request) {
+        apiService.addAttendanceType(request).enqueue(new Callback<AttendanceTypeResponse>() {
+            @Override
+            public void onResponse(Call<AttendanceTypeResponse> call, Response<AttendanceTypeResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    typeList.add(response.body());
+                    adapter.notifyItemInserted(typeList.size() - 1);
+                    Toast.makeText(getContext(), "새로운 출결 유형이 추가되었습니다.", Toast.LENGTH_SHORT).show();
+                } else {
+                    try {
+                        String errorMessage = response.errorBody() != null ? response.errorBody().string() : "알 수 없는 오류가 발생했습니다.";
+                        Toast.makeText(getContext(), "추가 실패: " + errorMessage, Toast.LENGTH_SHORT).show();
+                    } catch (IOException e) {
+                        Log.e(TAG, "Error reading error body", e);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<AttendanceTypeResponse> call, Throwable t) {
+                Toast.makeText(getContext(), "서버와 통신할 수 없습니다.", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error adding type", t);
+            }
+        });
+    }
+
     private class TypeAdapter extends RecyclerView.Adapter<TypeAdapter.ViewHolder> {
         private final List<AttendanceTypeResponse> types;
 
@@ -115,7 +167,6 @@ public class AttendanceTypeManagementFragment extends Fragment {
             AttendanceTypeResponse item = types.get(position);
             holder.tvTypeName.setText(item.getName());
             
-            // 시간 형식이 HH:mm:ss로 올 경우 앞 5자리만 사용 (HH:mm)
             String startWork = item.getEarliestTime() != null && item.getEarliestTime().length() >= 5 ? item.getEarliestTime().substring(0, 5) : item.getEarliestTime();
             String startClass = item.getStartTime() != null && item.getStartTime().length() >= 5 ? item.getStartTime().substring(0, 5) : item.getStartTime();
             String endClass = item.getEndTime() != null && item.getEndTime().length() >= 5 ? item.getEndTime().substring(0, 5) : item.getEndTime();
