@@ -76,7 +76,7 @@ public class AttendanceTypeManagementFragment extends Fragment {
     }
 
     private void updateTypeCount() {
-        tvTypeCount.setText("출결 유형 목록 (" + typeList.size() + "개)");
+        tvTypeCount.setText("출결 유형 목록 (" + typeList.size() + "건)");
     }
 
     private void fetchAttendanceTypes() {
