@@ -1,35 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:padding="16dp">
 
     <Button
         android:id="@+id/btn_add_member"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="+ 새 사용자 추가"
-        android:backgroundTint="#2196F3"
-        android:textColor="@android:color/white"
-        android:layout_marginBottom="16dp"/>
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:text="+ 학생 추가" />
 
     <TextView
         android:id="@+id/tv_member_count"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@id/btn_add_member"
         android:text="사용자 목록 (0명)"
         android:textSize="18sp"
         android:textStyle="bold"
+        android:layout_marginTop="16dp"
         android:layout_marginBottom="8dp"/>
 
     <!-- 테이블 헤더 -->
     <LinearLayout
+        android:id="@+id/header_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:background="@drawable/edit_text_border"
-        android:padding="12dp">
+        android:padding="12dp"
+        android:layout_below="@id/tv_member_count">
 
         <TextView
             android:layout_width="0dp"
@@ -95,7 +97,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_members"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
+        android:layout_height="match_parent"
+        android:layout_below="@id/header_layout"/>
 
-</LinearLayout>
+</RelativeLayout>
