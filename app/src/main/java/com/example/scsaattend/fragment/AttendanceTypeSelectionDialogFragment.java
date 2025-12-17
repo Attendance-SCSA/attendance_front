@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,7 +17,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.scsaattend.R;
-import com.example.scsaattend.dto.AttendanceTypeResponse;
 import com.example.scsaattend.dto.AttendanceTypeResponse;
 import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
@@ -126,10 +126,13 @@ public class AttendanceTypeSelectionDialogFragment extends DialogFragment {
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             AttendanceTypeResponse item = items.get(position);
             holder.tvTypeName.setText(item.getName());
-            holder.tvStartWork.setText(item.getEarliestTime().substring(0, 5));
-            holder.tvStartClass.setText(item.getStartTime().substring(0, 5));
-            holder.tvEndClass.setText(item.getEndTime().substring(0, 5));
-            holder.tvEndWork.setText(item.getLatestTime().substring(0, 5));
+            holder.tvStartWorkTime.setText(formatTime(item.getEarliestTime()));
+            holder.tvStartClassTime.setText(formatTime(item.getStartTime()));
+            holder.tvEndClassTime.setText(formatTime(item.getEndTime()));
+            holder.tvEndWorkTime.setText(formatTime(item.getLatestTime()));
+
+            // 삭제 버튼은 선택 다이얼로그에서는 필요 없으므로 숨김
+            holder.btnDeleteType.setVisibility(View.GONE);
 
             holder.itemView.setOnClickListener(v -> {
                 if (listener != null) {
@@ -139,21 +142,30 @@ public class AttendanceTypeSelectionDialogFragment extends DialogFragment {
             });
         }
 
+        private String formatTime(String time) {
+            if (time != null && time.length() >= 5) {
+                return time.substring(0, 5);
+            }
+            return "--:--";
+        }
+
         @Override
         public int getItemCount() {
             return items.size();
         }
 
         class ViewHolder extends RecyclerView.ViewHolder {
-            TextView tvTypeName, tvStartWork, tvStartClass, tvEndClass, tvEndWork;
+            TextView tvTypeName, tvStartWorkTime, tvStartClassTime, tvEndClassTime, tvEndWorkTime;
+            ImageButton btnDeleteType;
 
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
                 tvTypeName = itemView.findViewById(R.id.tv_type_name);
-                tvStartWork = itemView.findViewById(R.id.tv_start_work_time);
-                tvStartClass = itemView.findViewById(R.id.tv_start_class_time);
-                tvEndClass = itemView.findViewById(R.id.tv_end_class_time);
-                tvEndWork = itemView.findViewById(R.id.tv_end_work_time);
+                tvStartWorkTime = itemView.findViewById(R.id.tv_start_work_time);
+                tvStartClassTime = itemView.findViewById(R.id.tv_start_class_time);
+                tvEndClassTime = itemView.findViewById(R.id.tv_end_class_time);
+                tvEndWorkTime = itemView.findViewById(R.id.tv_end_work_time);
+                btnDeleteType = itemView.findViewById(R.id.btn_delete_type);
             }
         }
     }

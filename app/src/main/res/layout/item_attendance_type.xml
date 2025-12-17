@@ -3,7 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="4dp"
+    android:layout_marginStart="8dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginBottom="4dp"
     app:cardCornerRadius="4dp"
     app:cardElevation="2dp">
 
@@ -19,8 +22,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0.8"
-            android:text="기본"
             android:gravity="center"
+            android:textSize="11sp"
             android:textColor="@android:color/black"/>
 
         <TextView
@@ -28,8 +31,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1.2"
-            android:text="08:00"
             android:gravity="center"
+            android:textSize="11sp"
             android:textColor="@android:color/black"/>
 
         <TextView
@@ -37,8 +40,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1.2"
-            android:text="09:00"
             android:gravity="center"
+            android:textSize="11sp"
             android:textColor="@android:color/black"/>
 
         <TextView
@@ -46,8 +49,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1.2"
-            android:text="18:00"
             android:gravity="center"
+            android:textSize="11sp"
             android:textColor="@android:color/black"/>
 
         <TextView
@@ -55,25 +58,19 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1.2"
-            android:text="19:00"
             android:gravity="center"
+            android:textSize="11sp"
             android:textColor="@android:color/black"/>
 
-        <FrameLayout
+        <ImageButton
+            android:id="@+id/btn_delete_type"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="0.6">
-
-            <ImageButton
-                android:id="@+id/btn_delete_type"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:src="@android:drawable/ic_menu_delete"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:tint="#E53935"
-                android:contentDescription="삭제"/>
-        </FrameLayout>
+            android:layout_weight="0.6"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="삭제"
+            android:src="@android:drawable/ic_menu_delete"
+            android:tint="#E53935" />
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

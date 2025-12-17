@@ -3,7 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="4dp"
+    android:layout_marginStart="8dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginBottom="4dp"
     app:cardCornerRadius="4dp"
     app:cardElevation="2dp">
 
@@ -19,9 +22,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0.7"
-            android:text="이름"
             android:gravity="center"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:textColor="@android:color/black"/>
 
         <TextView
@@ -29,9 +31,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1.0"
-            android:text="아이디"
             android:gravity="center"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:textColor="@android:color/black"/>
 
         <TextView
@@ -39,9 +40,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0.7"
-            android:text="회사"
             android:gravity="center"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:textColor="@android:color/black"/>
 
         <TextView
@@ -49,43 +49,29 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1.5"
-            android:text="YY-MM-DD ~ YY-MM-DD"
             android:gravity="center"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:textColor="@android:color/black"/>
 
-        <LinearLayout
+        <ImageButton
+            android:id="@+id/btn_edit_password"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0.7"
-            android:gravity="center"
-            android:orientation="horizontal">
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="비밀번호 변경"
+            android:src="@drawable/ic_key"
+            android:tint="#A020F0" />
 
-            <ImageButton
-                android:id="@+id/btn_edit_password"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_key"
-                android:contentDescription="비밀번호 변경"
-                android:tint="#A020F0"/>
-        </LinearLayout>
-
-        <LinearLayout
+        <ImageButton
+            android:id="@+id/btn_delete_member"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
-            android:gravity="center"
-            android:orientation="horizontal">
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="회원 삭제"
+            android:src="@android:drawable/ic_menu_delete"
+            android:tint="#FF0000" />
 
-            <ImageButton
-                android:id="@+id/btn_delete_member"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_delete"
-                android:contentDescription="회원 삭제"
-                android:tint="#FF0000"/>
-        </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

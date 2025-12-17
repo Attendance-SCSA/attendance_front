@@ -420,7 +420,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
     }
     
     private void updateRecordCount() {
-        tvRecordCount.setText("출결 기록 (" + attendanceDetailList.size() + "건)");
+        tvRecordCount.setText("출결 목록 (" + attendanceDetailList.size() + "건)");
     }
 
     private void showDatePicker(boolean isStartDate) {
