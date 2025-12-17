@@ -2,7 +2,7 @@ package com.example.scsaattend.dto;
 
 import com.google.gson.annotations.SerializedName;
 
-public class AttendanceResponse {
+public class TodayMyAttendanceResponse {
     @SerializedName("ainfoId")
     private int ainfoId;
 

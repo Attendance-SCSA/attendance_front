@@ -1,5 +1,7 @@
 package com.example.scsaattend.login;
 
+import static com.example.scsaattend.common.Config.BASE_URL;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -26,13 +28,14 @@ public class LoginActivity extends AppCompatActivity {
     private ApiService apiService;
     private static final String TAG = "LoginActivity";
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
         // API 서비스 초기화
-        apiService = RetrofitClient.getClient("http://192.168.50.211:8888").create(ApiService.class);
+        apiService = RetrofitClient.getClient().create(ApiService.class);
 
         EditText idInput = findViewById(R.id.idInput);
         EditText passwordInput = findViewById(R.id.passwordInput);
