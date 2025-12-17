@@ -59,6 +59,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
+                        android:gravity="center_vertical"
                         android:orientation="horizontal">
 
                         <Button
@@ -70,54 +71,54 @@
                             android:textSize="12sp"
                             android:text="시작일 선택" />
 
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_marginEnd="8dp"
+                            android:text="~" />
+
                         <Button
                             android:id="@+id/btn_end_date"
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
                             android:layout_weight="1"
                             android:textSize="12sp"
                             android:text="종료일 선택" />
                     </LinearLayout>
 
-                    <LinearLayout
+                    <Button
+                        android:id="@+id/btn_user_select"
+                        style="@style/Widget.MaterialComponents.Button" 
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:orientation="horizontal">
+                        android:text="학생 선택" />
 
-                        <Button
-                            android:id="@+id/btn_user_select"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:textSize="12sp"
-                            android:text="사용자 선택: 전체" />
-
-                        <Button
-                            android:id="@+id/btn_query"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:layout_weight="1"
-                            android:textSize="12sp"
-                            android:text="조회" />
-                    </LinearLayout>
+                    <Button
+                        android:id="@+id/btn_query"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="8dp"
+                        android:text="조회" />
 
                 </LinearLayout>
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- 출결 기록 영역 -->
+        <!-- 출결 목록 영역 -->
         <TextView
             android:id="@+id/tv_record_count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="출결 기록 (0건)" />
+            android:layout_marginBottom="8dp"
+            android:text="출결 목록 (0건)"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -129,13 +130,13 @@
             android:paddingEnd="12dp"
             android:background="@color/scsa_light_blue">
 
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="날짜" android:textSize="11sp" android:gravity="center"/>
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.2" android:text="이름" android:textSize="11sp" android:gravity="center"/>
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="출근" android:textSize="11sp" android:gravity="center"/>
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="퇴근" android:textSize="11sp" android:gravity="center"/>
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.5" android:text="상태" android:textSize="11sp" android:gravity="center"/>
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.8" android:text="승인" android:textSize="11sp" android:gravity="center"/>
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.8" android:text="공결" android:textSize="11sp" android:gravity="center"/>
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="날짜" android:textSize="11sp" android:textStyle="bold" android:textColor="@android:color/black" android:gravity="center"/>
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.2" android:text="이름" android:textSize="11sp" android:textStyle="bold" android:textColor="@android:color/black" android:gravity="center"/>
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="출근" android:textSize="11sp" android:textStyle="bold" android:textColor="@android:color/black" android:gravity="center"/>
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="퇴근" android:textSize="11sp" android:textStyle="bold" android:textColor="@android:color/black" android:gravity="center"/>
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.5" android:text="상태" android:textSize="11sp" android:textStyle="bold" android:textColor="@android:color/black" android:gravity="center"/>
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.8" android:text="승인" android:textSize="11sp" android:textStyle="bold" android:textColor="@android:color/black" android:gravity="center"/>
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.8" android:text="공결" android:textSize="11sp" android:textStyle="bold" android:textColor="@android:color/black" android:gravity="center"/>
         </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView

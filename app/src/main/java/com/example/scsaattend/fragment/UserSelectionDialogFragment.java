@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.scsaattend.R;
-import com.example.scsaattend.dto.MemberDto;
 import com.example.scsaattend.dto.MemberResponse;
 import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;

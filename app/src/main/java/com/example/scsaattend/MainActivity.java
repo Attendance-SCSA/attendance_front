@@ -18,7 +18,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 
 import com.example.scsaattend.fragment.MemberManagementFragment;
-import androidx.fragment.app.Fragment;
+import com.example.scsaattend.fragment.AttendanceTypeManagementFragment;
 import com.example.scsaattend.fragment.AttendanceDetailFragment;
 import com.example.scsaattend.fragment.MyAttendanceFragment;
 import com.example.scsaattend.fragment.TodayAttendanceFragment;
@@ -111,6 +111,8 @@ public class MainActivity extends AppCompatActivity {
                 fragment = new MyAttendanceFragment();
             } else if (id == R.id.nav_admin_member) {
                 fragment = new MemberManagementFragment();
+            } else if (id == R.id.nav_admin_type_change) {
+                fragment = new AttendanceTypeManagementFragment();
             } else {
                 Toast.makeText(MainActivity.this, item.getTitle() + " 선택됨", Toast.LENGTH_SHORT).show();
             }
@@ -124,7 +126,6 @@ public class MainActivity extends AppCompatActivity {
                 getSupportActionBar().setTitle(item.getTitle());
             }
             
-            // Toast.makeText(MainActivity.this, item.getTitle() + " 선택됨", Toast.LENGTH_SHORT).show();
             drawerLayout.closeDrawer(GravityCompat.END);
             return true;
         });

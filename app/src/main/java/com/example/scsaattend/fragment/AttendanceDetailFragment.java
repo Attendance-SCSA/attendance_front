@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -24,8 +25,11 @@ import com.example.scsaattend.R;
 import com.example.scsaattend.dto.AttendanceInfoResponse;
 import com.example.scsaattend.dto.BatchUpdateRequest;
 import com.example.scsaattend.dto.BatchUpdateResponse;
+import com.example.scsaattend.dto.CalculateStatusRequest;
 import com.example.scsaattend.dto.ErrorResponse;
+import com.example.scsaattend.dto.MemberResponse;
 import com.example.scsaattend.dto.SearchAttendanceRequest;
+import com.example.scsaattend.dto.StatusResponse;
 import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
 import com.google.android.material.datepicker.CalendarConstraints;
@@ -39,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -50,7 +55,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class AttendanceDetailFragment extends Fragment implements UserSelectionDialogFragment.OnUsersSelectedListener, BatchUpdateDialogFragment.OnUpdateListener {
+public class AttendanceDetailFragment extends Fragment implements UserSelectionDialogFragment.OnUsersSelectedListener, BatchUpdateDialogFragment.OnUpdateListener, AttendanceTypeSelectionDialogFragment.OnAttendanceTypeSelectedListener {
 
     private static final String TAG = "AttendanceDetailFrag";
     private Button btnStartDate, btnEndDate, btnUserSelect, btnQuery;
@@ -98,7 +103,6 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         bottomActionBar.setVisibility(View.GONE);
 
         apiService = RetrofitClient.getClient().create(ApiService.class);
-        btnEndDate.setEnabled(false);
 
         // 리스너 설정
         btnStartDate.setOnClickListener(v -> showDatePicker(true));
@@ -117,17 +121,116 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
                 Toast.makeText(getContext(), "변경할 항목을 선택해주세요.", Toast.LENGTH_SHORT).show();
                 return;
             }
-            BatchUpdateDialogFragment dialog = BatchUpdateDialogFragment.newInstance();
-            dialog.setOnUpdateListener(this);
-            dialog.show(getParentFragmentManager(), "BatchUpdateDialog");
+            showBatchChangeOptions();
         });
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new AttendanceDetailAdapter(attendanceDetailList, this);
         recyclerView.setAdapter(adapter);
 
-        updateUserSelectionButtonText();
-        updateRecordCount();
+        initializeAndLoadData();
+    }
+
+    private void initializeAndLoadData() {
+        // 오늘 날짜로 기본 필터 설정
+        selectedStartDate = MaterialDatePicker.todayInUtcMilliseconds();
+        selectedEndDate = MaterialDatePicker.todayInUtcMilliseconds();
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String today = sdf.format(new Date());
+        btnStartDate.setText(today);
+        btnEndDate.setText(today);
+        btnEndDate.setEnabled(true);
+
+        // 전체 사용자 목록을 불러온 후, 자동으로 출결 데이터 조회
+        fetchAllUsersAndSearch();
+    }
+
+    private void fetchAllUsersAndSearch() {
+        apiService.getMembers().enqueue(new Callback<List<MemberResponse>>() {
+            @Override
+            public void onResponse(Call<List<MemberResponse>> call, Response<List<MemberResponse>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    userList.clear();
+                    for (MemberResponse member : response.body()) {
+                        // 기본값 "전체"를 위해 isSelected는 false로 둠
+                        userList.add(new SelectableUser(member.getId(), member.getName(), false));
+                    }
+                    updateUserSelectionButtonText();
+                    searchAttendanceData(); // 사용자 로딩 후 자동 검색
+                } else {
+                    Toast.makeText(getContext(), "사용자 목록을 불러오지 못했습니다.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<MemberResponse>> call, Throwable t) {
+                Toast.makeText(getContext(), "사용자 목록 로딩 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showBatchChangeOptions() {
+        final CharSequence[] options = {"출결 자동 결정", "출결 유형 변경", "휴일 여부 변경"};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("일괄 변경 작업 선택");
+        builder.setItems(options, (dialog, which) -> {
+            switch (which) {
+                case 0:
+                    calculateStatus();
+                    break;
+                case 1:
+                    AttendanceTypeSelectionDialogFragment typeDialog = AttendanceTypeSelectionDialogFragment.newInstance();
+                    typeDialog.setOnAttendanceTypeSelectedListener(AttendanceDetailFragment.this);
+                    typeDialog.show(getParentFragmentManager(), "AttendanceTypeSelectionDialog");
+                    break;
+                case 2:
+                    showIsOffSelectionDialog();
+                    break;
+            }
+        });
+        builder.show();
+    }
+
+    private void calculateStatus() {
+        List<Long> aInfoIdList = new ArrayList<>(selectedItems);
+        CalculateStatusRequest request = new CalculateStatusRequest(aInfoIdList);
+
+        apiService.calculateAttendanceStatus(request).enqueue(new Callback<StatusResponse>() {
+            @Override
+            public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Toast.makeText(getContext(), response.body().getMessage(), Toast.LENGTH_LONG).show();
+                    searchAttendanceData();
+                } else {
+                    Toast.makeText(getContext(), "출석 상태 자동 결정 실패", Toast.LENGTH_SHORT).show();
+                }
+                exitSelectionMode();
+            }
+
+            @Override
+            public void onFailure(Call<StatusResponse> call, Throwable t) {
+                Toast.makeText(getContext(), "서버와 통신할 수 없습니다.", Toast.LENGTH_SHORT).show();
+                exitSelectionMode();
+            }
+        });
+    }
+
+    private void showIsOffSelectionDialog() {
+        final CharSequence[] isOffOptions = {"휴일", "수업일"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("휴일 여부 변경");
+        builder.setItems(isOffOptions, (dialog, which) -> {
+            Map<String, Object> updateData = new HashMap<>();
+            if (which == 0) { // 휴일
+                updateData.put("isOff", "Y");
+            } else { // 수업일
+                updateData.put("isOff", "N");
+            }
+            onUpdate(updateData);
+        });
+        builder.show();
     }
 
     private void toggleFilterVisibility() {
@@ -200,10 +303,15 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
                 .map(u -> u.id)
                 .collect(Collectors.toList());
 
-        if (selectedMemberIds.isEmpty()) {
+        if (selectedMemberIds.isEmpty() && !userList.isEmpty()) {
             selectedMemberIds = userList.stream().map(u -> u.id).collect(Collectors.toList());
         }
         
+        if (selectedMemberIds.isEmpty()) {
+             Toast.makeText(getContext(), "조회할 학생이 없습니다.", Toast.LENGTH_SHORT).show();
+             return;
+        }
+
         SearchAttendanceRequest request = new SearchAttendanceRequest(startDate, endDate, selectedMemberIds);
 
         apiService.searchAttendance(request).enqueue(new Callback<List<AttendanceInfoResponse>>() {
@@ -249,6 +357,18 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         this.userList = selectedUsers;
         updateUserSelectionButtonText();
     }
+
+    @Override
+    public void onAttendanceTypeSelected(long typeId, String typeName) {
+        Map<String, Object> updateData = new HashMap<>();
+        updateData.put("aTypeId", typeId);
+        updateData.put("arrivalTime", null);
+        updateData.put("leavingTime", null);
+        updateData.put("status", null);
+        updateData.put("isApproved", null);
+        updateData.put("isOfficial", null);
+        onUpdate(updateData);
+    }
     
     @Override
     public void onUpdate(Map<String, Object> updateData) {
@@ -292,14 +412,14 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
     private void updateUserSelectionButtonText() {
         long selectedCount = userList.stream().filter(u -> u.isSelected).count();
         if (selectedCount == userList.size() || selectedCount == 0) {
-            btnUserSelect.setText("사용자 선택: 전체");
+            btnUserSelect.setText("학생 선택: 전체");
         } else {
-            btnUserSelect.setText("사용자 선택: " + selectedCount + "명");
+            btnUserSelect.setText("학생 선택: " + selectedCount + "명");
         }
     }
     
     private void updateRecordCount() {
-        tvRecordCount.setText("출결 기록 (" + attendanceDetailList.size() + "건)");
+        tvRecordCount.setText("출결 목록 (" + attendanceDetailList.size() + "건)");
     }
 
     private void showDatePicker(boolean isStartDate) {

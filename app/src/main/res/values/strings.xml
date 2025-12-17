@@ -15,7 +15,7 @@
     <!-- 관리자용 메뉴 -->
     <string name="menu_admin_today">오늘의 출결현황</string>
     <string name="menu_admin_detail">출결 상세</string>
-    <string name="menu_admin_member">회원 관리</string>
+    <string name="menu_admin_member">학생 관리</string>
     <string name="menu_admin_approval">관리자 승인</string>
-    <string name="menu_admin_type_change">출결 타입 변경</string>
+    <string name="menu_admin_type_change">출결 유형</string>
 </resources>
