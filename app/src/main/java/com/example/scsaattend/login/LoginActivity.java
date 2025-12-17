@@ -4,23 +4,22 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.scsaattend.MainActivity;
 import com.example.scsaattend.R;
+import com.example.scsaattend.dto.ErrorResponse;
+import com.example.scsaattend.dto.LoginRequest;
+import com.example.scsaattend.dto.LoginResponse;
 import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
-import com.example.scsaattend.network.dto.ErrorResponse;
-import com.example.scsaattend.network.dto.LoginRequest;
-import com.example.scsaattend.network.dto.LoginResponse;
 import com.google.gson.Gson;
+import java.io.IOException;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import java.io.IOException;
 
 public class LoginActivity extends AppCompatActivity {
     private ApiService apiService;
@@ -38,8 +37,6 @@ public class LoginActivity extends AppCompatActivity {
         Button loginButton = findViewById(R.id.loginButton);
 
         loginButton.setOnClickListener(v -> {
-            Log.d(TAG, "Login Button Clicked!");
-
             String userId = idInput.getText().toString();
             String userPwd = passwordInput.getText().toString();
 
@@ -49,14 +46,14 @@ public class LoginActivity extends AppCompatActivity {
             }
 
             LoginRequest request = new LoginRequest(userId, userPwd);
-            
+
             apiService.login(request).enqueue(new Callback<LoginResponse>() {
                 @Override
                 public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                     if (response.isSuccessful() && response.body() != null) {
                         LoginResponse loginResponse = response.body();
                         String serverRole = loginResponse.getRole();
-                        
+
                         String appRole = "admin".equalsIgnoreCase(serverRole) ? "ROLE_ADMIN" : "ROLE_USER";
 
                         SharedPreferences prefs = getSharedPreferences("AuthPrefs", MODE_PRIVATE);
@@ -64,7 +61,7 @@ public class LoginActivity extends AppCompatActivity {
                         editor.putString("user_role", appRole);
                         editor.putString("user_id", loginResponse.getLoginId());
                         editor.putString("user_name", loginResponse.getName());
-                        editor.putLong("user_numeric_id", loginResponse.getId()); // 숫자 id 저장
+                        editor.putLong("user_numeric_id", loginResponse.getId());
                         editor.apply();
 
                         Toast.makeText(LoginActivity.this, "로그인 성공!", Toast.LENGTH_SHORT).show();

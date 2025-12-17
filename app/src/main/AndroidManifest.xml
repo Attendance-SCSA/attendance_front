@@ -4,6 +4,22 @@
 
     <!-- 인터넷 권한 -->
     <uses-permission android:name="android.permission.INTERNET" />
+    
+    <!-- 블루투스 권한 (Android 12 이상) -->
+    <!-- neverForLocation 제거: MAC 주소 스캔 및 특정 비콘 탐색 정확도 향상 -->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+    
+    <!-- 블루투스 권한 (Android 11 이하) -->
+    <uses-permission android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
+        
+    <!-- 위치 권한 (비콘 스캔을 위해 필요) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:name=".MyApplication"
@@ -15,7 +31,7 @@
         android:roundIcon="@drawable/scsa6_icon"
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
-        android:theme="@style/Theme.SCSAattend"> <!-- 앱 전체 기본 테마 적용 -->
+        android:theme="@style/Theme.SCSAattend">
         
         <activity
             android:name=".login.LoginActivity"
@@ -29,7 +45,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="false" />
-            <!-- 테마 설정 제거하고 앱 기본값 따르도록 수정 -->
+            
     </application>
 
 </manifest>
