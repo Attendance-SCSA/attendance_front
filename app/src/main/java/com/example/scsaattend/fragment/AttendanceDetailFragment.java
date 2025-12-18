@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -350,8 +351,10 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         btnSave.setOnClickListener(view -> {
             Map<String, Object> updateData = new HashMap<>();
             if (isAdmin) {
-                updateData.put("arrivalTime", tvInTime.getText().toString());
-                updateData.put("leavingTime", tvOutTime.getText().toString());
+                String inStr = tvInTime.getText().toString();
+                String outStr = tvOutTime.getText().toString();
+                updateData.put("arrivalTime", "-".equals(inStr) ? null : inStr);
+                updateData.put("leavingTime", "-".equals(outStr) ? null : outStr);
                 updateData.put("status", getSelectedStatus(spStatus));
                 updateData.put("isApproved", getSelectedApproval(spApproval));
                 updateData.put("isOfficial", getSelectedOfficial(spOfficial));
@@ -373,6 +376,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         NumberPicker hourPicker = dialogView.findViewById(R.id.picker_hour);
         NumberPicker minutePicker = dialogView.findViewById(R.id.picker_minute);
         NumberPicker secondPicker = dialogView.findViewById(R.id.picker_second);
+        CheckBox cbClear = dialogView.findViewById(R.id.cb_clear_time);
 
         NumberPicker.Formatter formatter = value -> String.format(Locale.getDefault(), "%02d", value);
         hourPicker.setMinValue(0); hourPicker.setMaxValue(23); hourPicker.setFormatter(formatter);
@@ -388,8 +392,12 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
 
         builder.setTitle("시간 선택");
         builder.setPositiveButton("확인", (dialog, which) -> {
-            String time = String.format(Locale.getDefault(), "%02d:%02d:%02d", hourPicker.getValue(), minutePicker.getValue(), secondPicker.getValue());
-            targetTextView.setText(time);
+            if (cbClear.isChecked()) {
+                targetTextView.setText("-");
+            } else {
+                String time = String.format(Locale.getDefault(), "%02d:%02d:%02d", hourPicker.getValue(), minutePicker.getValue(), secondPicker.getValue());
+                targetTextView.setText(time);
+            }
         });
         builder.setNegativeButton("취소", (dialog, which) -> dialog.cancel());
         builder.show();
@@ -639,7 +647,6 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
                     String formattedIn = fragment.formatLongTime(item.checkIn);
                     String formattedOut = fragment.formatLongTime(item.checkOut);
                     
-                    // 목록(RecyclerView)에서 대시(-) 처리 로직 보강
                     tvCheckIn.setText("-".equals(formattedIn) ? "-" : (formattedIn.length() >= 5 ? formattedIn.substring(0, 5) : formattedIn));
                     tvCheckOut.setText("-".equals(formattedOut) ? "-" : (formattedOut.length() >= 5 ? formattedOut.substring(0, 5) : formattedOut));
                     
