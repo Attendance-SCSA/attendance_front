@@ -171,12 +171,11 @@ public class MyAttendanceFragment extends Fragment {
         HashSet<CalendarDay> normalDates = new HashSet<>();
         HashSet<CalendarDay> lateDates = new HashSet<>();
         HashSet<CalendarDay> absentDates = new HashSet<>();
+        HashSet<CalendarDay> holidayDates = new HashSet<>();
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
         for (AttendanceInfoResponse info : list) {
-            if ("Y".equalsIgnoreCase(info.getIsOff())) continue;
-
             try {
                 String dateString = info.getADate();
                 if (dateString == null) continue;
@@ -187,6 +186,11 @@ public class MyAttendanceFragment extends Fragment {
                     cal.setTime(date);
                     CalendarDay day = CalendarDay.from(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
                     
+                    if ("Y".equalsIgnoreCase(info.getIsOff())) {
+                        holidayDates.add(day);
+                        continue;
+                    }
+
                     String status = info.getStatus();
                     if (status != null) {
                         String lowerStatus = status.toLowerCase();
@@ -209,6 +213,7 @@ public class MyAttendanceFragment extends Fragment {
         if (!normalDates.isEmpty()) calendarView.addDecorator(new EventDecorator(COLOR_NORMAL, normalDates));
         if (!lateDates.isEmpty()) calendarView.addDecorator(new EventDecorator(COLOR_LATE, lateDates));
         if (!absentDates.isEmpty()) calendarView.addDecorator(new EventDecorator(COLOR_ABSENT, absentDates));
+        if (!holidayDates.isEmpty()) calendarView.addDecorator(new EventDecorator(COLOR_HOLIDAY, holidayDates));
     }
     
     private void updateDetailCard(CalendarDay date) {
@@ -229,11 +234,12 @@ public class MyAttendanceFragment extends Fragment {
 
         if (selectedInfo != null) {
             if ("Y".equalsIgnoreCase(selectedInfo.getIsOff())) {
+                // 휴일인 경우 시간은 대시(-)로, 상태는 "휴일"로 표시
                 tvDetailCheckIn.setText("-");
                 tvDetailCheckOut.setText("-");
                 tvDetailStatus.setText("휴일");
-                tvDetailStatus.setBackgroundTintList(ColorStateList.valueOf(COLOR_HOLIDAY));
                 tvDetailStatus.setBackgroundResource(R.drawable.bg_status_label);
+                tvDetailStatus.setBackgroundTintList(ColorStateList.valueOf(COLOR_HOLIDAY));
             } else {
                 String inTime = selectedInfo.getArrivalTime();
                 String outTime = selectedInfo.getLeavingTime();
