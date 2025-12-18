@@ -320,7 +320,13 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
 
         tvTitle.setText(item.name + "님 출결 수정");
         tvDate.setText("날짜 : " + item.fullDate);
-        tvType.setText("유형 : " + (item.atype != null ? item.atype.getName() : "-"));
+        
+        // 유형 이름 옆에 시간 정보 추가 (학생 모드와 동일)
+        String typeInfo = "-";
+        if (item.atype != null) {
+            typeInfo = item.atype.getName() + " (" + formatShortTime(item.atype.getStartTime()) + " ~ " + formatShortTime(item.atype.getEndTime()) + ")";
+        }
+        tvType.setText("유형 : " + typeInfo);
 
         tvInTime.setText(formatLongTime(item.checkIn));
         tvOutTime.setText(formatLongTime(item.checkOut));
@@ -333,7 +339,6 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         etAdminNote.setText(item.adminNote != null ? item.adminNote : "");
 
         boolean isAdmin = "ROLE_ADMIN".equals(userRole);
-        
         tvInTime.setEnabled(isAdmin);
         tvOutTime.setEnabled(isAdmin);
         spStatus.setEnabled(isAdmin);
@@ -660,8 +665,10 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
                 } else {
                     String formattedIn = fragment.formatLongTime(item.checkIn);
                     String formattedOut = fragment.formatLongTime(item.checkOut);
+                    
                     tvCheckIn.setText("-".equals(formattedIn) ? "-" : (formattedIn.length() >= 5 ? formattedIn.substring(0, 5) : formattedIn));
                     tvCheckOut.setText("-".equals(formattedOut) ? "-" : (formattedOut.length() >= 5 ? formattedOut.substring(0, 5) : formattedOut));
+                    
                     tvPublicLeave.setText(item.publicLeave != null ? ("Y".equals(item.publicLeave) ? "O" : "X") : "-");
                     
                     String koreanStatus = fragment.getKoreanStatus(item.status);
