@@ -2,6 +2,7 @@ package com.example.scsaattend.fragment;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
@@ -49,12 +50,13 @@ public class MyAttendanceFragment extends Fragment {
 
     // 월별 출결 데이터 저장
     private List<AttendanceInfoResponse> monthlyAttendanceList = new ArrayList<>();
-    private boolean isInitialLoad = true; // 최초 로드 확인용 플래그
+    private boolean isInitialLoad = true; 
 
-    // 상태별 색상
+    // 상태별 색상 (범례와 동일)
     private static final int COLOR_NORMAL = Color.parseColor("#A5D6A7"); 
     private static final int COLOR_LATE = Color.parseColor("#FFCC80");   
     private static final int COLOR_ABSENT = Color.parseColor("#EF9A9A");
+    private static final int COLOR_HOLIDAY = Color.parseColor("#E0E0E0"); // 휴일용 연회색
 
     @Nullable
     @Override
@@ -69,20 +71,17 @@ public class MyAttendanceFragment extends Fragment {
         btnPrevMonth = view.findViewById(R.id.btnPrevMonth);
         btnNextMonth = view.findViewById(R.id.btnNextMonth);
         
-        // 상세 정보 UI 연결
         cardDetail = view.findViewById(R.id.cardDetail);
         tvSelectedDate = view.findViewById(R.id.tvSelectedDate);
         tvDetailCheckIn = view.findViewById(R.id.tvDetailCheckIn);
         tvDetailCheckOut = view.findViewById(R.id.tvDetailCheckOut);
         tvDetailStatus = view.findViewById(R.id.tvDetailStatus);
 
-        // 오늘 날짜를 기본 선택으로 설정
         CalendarDay today = CalendarDay.today();
         calendarView.setSelectedDate(today);
         calendarView.setCurrentDate(today);
 
-        // 초기 설정
-        isInitialLoad = true; // 프래그먼트 생성 시 초기화
+        isInitialLoad = true;
         updateMonthDisplay();
         setupCalendarListeners();
         fetchMonthlyAttendance();
@@ -95,15 +94,12 @@ public class MyAttendanceFragment extends Fragment {
 
     private void setupCalendarListeners() {
         calendarView.setTopbarVisible(false); 
-        
-        // 월 변경 리스너
         calendarView.setOnMonthChangedListener((widget, date) -> {
             currentCalendar.set(date.getYear(), date.getMonth() - 1, 1);
             updateMonthDisplay();
             fetchMonthlyAttendance();
         });
 
-        // 날짜 선택 리스너
         calendarView.setOnDateChangedListener(new OnDateSelectedListener() {
             @Override
             public void onDateSelected(@NonNull MaterialCalendarView widget, @NonNull CalendarDay date, boolean selected) {
@@ -126,10 +122,7 @@ public class MyAttendanceFragment extends Fragment {
         SharedPreferences prefs = requireContext().getSharedPreferences("AuthPrefs", Context.MODE_PRIVATE);
         long memId = prefs.getLong("user_numeric_id", -1);
 
-        if (memId == -1) {
-            Toast.makeText(getContext(), "로그인 정보를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        if (memId == -1) return;
 
         CalendarDay currentDate = calendarView.getCurrentDate();
         Calendar calendar = Calendar.getInstance();
@@ -154,19 +147,16 @@ public class MyAttendanceFragment extends Fragment {
             @Override
             public void onResponse(Call<List<AttendanceInfoResponse>> call, Response<List<AttendanceInfoResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    monthlyAttendanceList = response.body(); // 월별 데이터 저장
+                    monthlyAttendanceList = response.body();
                     updateCalendarDecorators(monthlyAttendanceList);
 
-                    // 최초 실행 시에만 오늘 날짜 정보를 표시
                     if (isInitialLoad) {
                         CalendarDay selectedDate = calendarView.getSelectedDate();
                         if (selectedDate != null) {
                             updateDetailCard(selectedDate);
                         }
-                        isInitialLoad = false; // 이후 월 변경(슬라이드) 시에는 카드를 건드리지 않음
+                        isInitialLoad = false;
                     }
-                } else {
-                    Log.e(TAG, "Failed to fetch attendance: " + response.code());
                 }
             }
 
@@ -216,15 +206,9 @@ public class MyAttendanceFragment extends Fragment {
         }
 
         calendarView.removeDecorators();
-        if (!normalDates.isEmpty()) {
-            calendarView.addDecorator(new EventDecorator(COLOR_NORMAL, normalDates));
-        }
-        if (!lateDates.isEmpty()) {
-            calendarView.addDecorator(new EventDecorator(COLOR_LATE, lateDates));
-        }
-        if (!absentDates.isEmpty()) {
-            calendarView.addDecorator(new EventDecorator(COLOR_ABSENT, absentDates));
-        }
+        if (!normalDates.isEmpty()) calendarView.addDecorator(new EventDecorator(COLOR_NORMAL, normalDates));
+        if (!lateDates.isEmpty()) calendarView.addDecorator(new EventDecorator(COLOR_LATE, lateDates));
+        if (!absentDates.isEmpty()) calendarView.addDecorator(new EventDecorator(COLOR_ABSENT, absentDates));
     }
     
     private void updateDetailCard(CalendarDay date) {
@@ -248,6 +232,8 @@ public class MyAttendanceFragment extends Fragment {
                 tvDetailCheckIn.setText("-");
                 tvDetailCheckOut.setText("-");
                 tvDetailStatus.setText("휴일");
+                tvDetailStatus.setBackgroundTintList(ColorStateList.valueOf(COLOR_HOLIDAY));
+                tvDetailStatus.setBackgroundResource(R.drawable.bg_status_label);
             } else {
                 String inTime = selectedInfo.getArrivalTime();
                 String outTime = selectedInfo.getLeavingTime();
@@ -260,25 +246,38 @@ public class MyAttendanceFragment extends Fragment {
 
                 String status = selectedInfo.getStatus();
                 String displayStatus = "기록 없음";
+                int bgColor = Color.TRANSPARENT;
+
                 if (status != null) {
                     String lowerStatus = status.toLowerCase();
                     if (lowerStatus.contains("normal") || lowerStatus.contains("정상")) {
                         displayStatus = "출석";
+                        bgColor = COLOR_NORMAL;
                     } else if (lowerStatus.contains("late") || lowerStatus.contains("early") || 
                                lowerStatus.contains("지각") || lowerStatus.contains("조퇴")) {
                         displayStatus = "지각/조퇴";
+                        bgColor = COLOR_LATE;
                     } else if (lowerStatus.contains("absent") || lowerStatus.contains("결석")) {
                         displayStatus = "결석";
+                        bgColor = COLOR_ABSENT;
                     } else {
                         displayStatus = status;
                     }
                 }
+                
                 tvDetailStatus.setText(displayStatus);
+                if (bgColor != Color.TRANSPARENT) {
+                    tvDetailStatus.setBackgroundResource(R.drawable.bg_status_label);
+                    tvDetailStatus.setBackgroundTintList(ColorStateList.valueOf(bgColor));
+                } else {
+                    tvDetailStatus.setBackground(null);
+                }
             }
         } else {
             tvDetailCheckIn.setText("-");
             tvDetailCheckOut.setText("-");
             tvDetailStatus.setText("기록 없음");
+            tvDetailStatus.setBackground(null);
         }
     }
 }
