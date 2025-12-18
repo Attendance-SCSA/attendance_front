@@ -5,14 +5,13 @@ import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -44,6 +43,7 @@ public class MyAttendanceFragment extends Fragment {
     private TextView tvCurrentMonth;
     private MaterialCalendarView calendarView;
     private ImageButton btnPrevMonth, btnNextMonth;
+    private ProgressBar pbLoading;
     private ApiService apiService;
     private Call<List<AttendanceInfoResponse>> currentCall; 
 
@@ -52,16 +52,13 @@ public class MyAttendanceFragment extends Fragment {
     private Button btnViewDetail;
 
     private List<AttendanceInfoResponse> monthlyAttendanceList = new ArrayList<>();
-    private AttendanceInfoResponse selectedAttendanceInfo; // 현재 선택된 날짜의 데이터 유지
+    private AttendanceInfoResponse selectedAttendanceInfo; 
     private boolean isInitialLoad = true; 
 
     private static final int COLOR_NORMAL = Color.parseColor("#A5D6A7"); 
     private static final int COLOR_LATE = Color.parseColor("#FFCC80");   
     private static final int COLOR_ABSENT = Color.parseColor("#EF9A9A");
     private static final int COLOR_HOLIDAY = Color.parseColor("#E0E0E0");
-
-    private final Handler debounceHandler = new Handler(Looper.getMainLooper());
-    private Runnable fetchRunnable;
 
     @Nullable
     @Override
@@ -74,6 +71,7 @@ public class MyAttendanceFragment extends Fragment {
         calendarView = view.findViewById(R.id.calendarView);
         btnPrevMonth = view.findViewById(R.id.btnPrevMonth);
         btnNextMonth = view.findViewById(R.id.btnNextMonth);
+        pbLoading = view.findViewById(R.id.pbLoading);
         
         cardDetail = view.findViewById(R.id.cardDetail);
         tvSelectedDate = view.findViewById(R.id.tvSelectedDate);
@@ -90,12 +88,12 @@ public class MyAttendanceFragment extends Fragment {
         updateMonthDisplay();
         setupCalendarListeners();
         
-        fetchMonthlyAttendance();
+        // 초기 로딩
+        fetchMonthlyAttendance(today, false);
 
-        btnPrevMonth.setOnClickListener(v -> calendarView.goToPrevious());
-        btnNextMonth.setOnClickListener(v -> calendarView.goToNext());
+        btnPrevMonth.setOnClickListener(v -> moveMonth(-1));
+        btnNextMonth.setOnClickListener(v -> moveMonth(1));
         
-        // 상세 보기 버튼 클릭 시 저장된 selectedAttendanceInfo 사용
         btnViewDetail.setOnClickListener(v -> {
             if (selectedAttendanceInfo != null) {
                 showDetailDialog(selectedAttendanceInfo);
@@ -109,30 +107,37 @@ public class MyAttendanceFragment extends Fragment {
 
     private void setupCalendarListeners() {
         calendarView.setTopbarVisible(false); 
-        
-        calendarView.setOnMonthChangedListener((widget, date) -> {
-            updateMonthDisplay();
-            // 월 변경 시 상세 카드는 유지하고 데이터만 백그라운드 로드
-            debounceHandler.removeCallbacks(fetchRunnable);
-            fetchRunnable = this::fetchMonthlyAttendance;
-            debounceHandler.postDelayed(fetchRunnable, 300);
-        });
+        // 스와이프 이동은 비활성화하거나, 버튼 이동과 동일한 로직을 타게 해야 함
+        // 여기서는 버튼 이동 위주로 처리
+        calendarView.setPagingEnabled(false); 
 
         calendarView.setOnDateChangedListener((widget, date, selected) -> {
             if (selected) updateDetailCard(date);
         });
     }
 
-    private void fetchMonthlyAttendance() {
+    private void moveMonth(int offset) {
+        CalendarDay current = calendarView.getCurrentDate();
+        Calendar cal = Calendar.getInstance();
+        cal.set(current.getYear(), current.getMonth() - 1, 1);
+        cal.add(Calendar.MONTH, offset);
+        
+        CalendarDay targetDay = CalendarDay.from(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, 1);
+        fetchMonthlyAttendance(targetDay, true);
+    }
+
+    private void fetchMonthlyAttendance(CalendarDay targetDate, boolean shouldMove) {
         if (currentCall != null) currentCall.cancel();
 
         SharedPreferences prefs = requireContext().getSharedPreferences("AuthPrefs", Context.MODE_PRIVATE);
         long memId = prefs.getLong("user_numeric_id", -1);
         if (memId == -1) return;
 
-        CalendarDay current = calendarView.getCurrentDate();
+        pbLoading.setVisibility(View.VISIBLE);
+        setButtonsEnabled(false);
+
         Calendar cal = Calendar.getInstance();
-        cal.set(current.getYear(), current.getMonth() - 1, 1);
+        cal.set(targetDate.getYear(), targetDate.getMonth() - 1, 1);
         
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         String strStartDate = sdf.format(cal.getTime());
@@ -147,11 +152,18 @@ public class MyAttendanceFragment extends Fragment {
         currentCall.enqueue(new Callback<List<AttendanceInfoResponse>>() {
             @Override
             public void onResponse(Call<List<AttendanceInfoResponse>> call, Response<List<AttendanceInfoResponse>> response) {
+                pbLoading.setVisibility(View.GONE);
+                setButtonsEnabled(true);
+
                 if (response.isSuccessful() && response.body() != null) {
                     monthlyAttendanceList = response.body();
                     updateCalendarDecorators(monthlyAttendanceList);
                     
-                    // 초기 로드 시에만 현재 선택된 날짜(오늘)를 기반으로 상세 정보를 설정
+                    if (shouldMove) {
+                        calendarView.setCurrentDate(targetDate);
+                        updateMonthDisplay();
+                    }
+
                     if (isInitialLoad) {
                         updateDetailCard(calendarView.getSelectedDate());
                         isInitialLoad = false;
@@ -162,9 +174,19 @@ public class MyAttendanceFragment extends Fragment {
 
             @Override
             public void onFailure(Call<List<AttendanceInfoResponse>> call, Throwable t) {
-                if (!call.isCanceled()) Log.e(TAG, "Error", t);
+                pbLoading.setVisibility(View.GONE);
+                setButtonsEnabled(true);
+                if (!call.isCanceled()) {
+                    Log.e(TAG, "Error", t);
+                    Toast.makeText(getContext(), "데이터 로드 실패", Toast.LENGTH_SHORT).show();
+                }
             }
         });
+    }
+
+    private void setButtonsEnabled(boolean enabled) {
+        btnPrevMonth.setEnabled(enabled);
+        btnNextMonth.setEnabled(enabled);
     }
 
     private void updateCalendarDecorators(List<AttendanceInfoResponse> list) {
@@ -203,7 +225,6 @@ public class MyAttendanceFragment extends Fragment {
         String dateStr = formatDate(date);
         tvSelectedDate.setText(dateStr);
 
-        // 현재 선택된 날짜의 데이터를 전역 변수에 저장
         selectedAttendanceInfo = findInfoByDate(dateStr);
         
         if (selectedAttendanceInfo != null) {
