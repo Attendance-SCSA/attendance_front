@@ -20,9 +20,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
+
 import androidx.annotation.RequiresPermission;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,15 +34,16 @@ public class BeaconScanner {
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothLeScanner bluetoothLeScanner;
     private BeaconScanCallback beaconScanCallback;
-    private static final long SCAN_PERIOD = 10000; // 10초 제한
+    private static final long SCAN_PERIOD = 10000; // 10초 스캔
 
-    private Handler handler = new Handler(Looper.getMainLooper());
-    private boolean isScanning = false;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable timeoutRunnable;
+    private boolean isScanningInternal = false;
 
     public interface BeaconScanCallback {
         void onBeaconFound(BluetoothDevice device, int rssi, byte[] scanRecord);
         void onScanFailed(int errorCode);
-        void onScanTimeout(); // 타임아웃 콜백 추가
+        void onScanTimeout();
     }
 
     public BeaconScanner(Context context, BeaconScanCallback callback) {
@@ -94,45 +97,59 @@ public class BeaconScanner {
 
     @SuppressLint("MissingPermission")
     public void startScan() {
-        if (bluetoothLeScanner == null || isScanning) return;
+        if (bluetoothLeScanner == null) {
+            Toast.makeText(context, "블루투스 스캐너를 사용할 수 없습니다.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        isScanning = true;
-        Log.d(TAG, "Start Scan - Timeout in " + SCAN_PERIOD + "ms");
+        Log.d(TAG, "Start Scan - Target: " + TARGET_BEACON_ADDRESS);
+        
+        if (timeoutRunnable != null) {
+            handler.removeCallbacks(timeoutRunnable);
+        }
 
-        // 지정된 시간(10초) 후 자동 정지 및 타임아웃 알림
-        handler.postDelayed(() -> {
-            if (isScanning) {
+        timeoutRunnable = () -> {
+            if (isScanningInternal) {
+                Log.d(TAG, "Scan timeout reached");
                 stopScan();
-                Log.d(TAG, "Scan Timeout");
                 if (beaconScanCallback != null) {
                     beaconScanCallback.onScanTimeout();
                 }
             }
-        }, SCAN_PERIOD);
+        };
+        handler.postDelayed(timeoutRunnable, SCAN_PERIOD);
 
         List<ScanFilter> filters = new ArrayList<>();
         if (TARGET_BEACON_ADDRESS != null && !TARGET_BEACON_ADDRESS.isEmpty()) {
-            filters.add(new ScanFilter.Builder().setDeviceAddress(TARGET_BEACON_ADDRESS).build());
+            ScanFilter filter = new ScanFilter.Builder()
+                    .setDeviceAddress(TARGET_BEACON_ADDRESS)
+                    .build();
+            filters.add(filter);
         }
 
         ScanSettings settings = new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                 .build();
 
+        isScanningInternal = true;
         bluetoothLeScanner.startScan(filters, settings, scanCallback);
     }
 
     @SuppressLint("MissingPermission")
     public void stopScan() {
-        if (bluetoothLeScanner != null && isScanning) {
-            isScanning = false;
-            handler.removeCallbacksAndMessages(null); // 예약된 타임아웃 취소
+        if (timeoutRunnable != null) {
+            handler.removeCallbacks(timeoutRunnable);
+            timeoutRunnable = null;
+        }
+
+        if (bluetoothLeScanner != null && isScanningInternal) {
             Log.d(TAG, "Stop Scan");
             try {
                 bluetoothLeScanner.stopScan(scanCallback);
             } catch (Exception e) {
-                Log.e(TAG, "Stop scan error: " + e.getMessage());
+                Log.e(TAG, "Stop scan failed: " + e.getMessage());
             }
+            isScanningInternal = false;
         }
     }
 
@@ -141,17 +158,19 @@ public class BeaconScanner {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
-            if (!isScanning) return;
-
+            
             BluetoothDevice device = result.getDevice();
             if (device == null) return;
             
-            if (TARGET_BEACON_ADDRESS.equalsIgnoreCase(device.getAddress())) {
-                 Log.d(TAG, "Target Beacon Found");
-                 stopScan(); // 발견 즉시 스캔 중지
+            String deviceAddress = device.getAddress();
+            int rssi = result.getRssi();
+
+            if (TARGET_BEACON_ADDRESS.equalsIgnoreCase(deviceAddress)) {
+                 Log.d(TAG, "!!! TARGET BEACON FOUND !!!");
+                 
                  if (beaconScanCallback != null) {
                     byte[] scanRecord = result.getScanRecord() != null ? result.getScanRecord().getBytes() : null;
-                    beaconScanCallback.onBeaconFound(device, result.getRssi(), scanRecord);
+                    beaconScanCallback.onBeaconFound(device, rssi, scanRecord);
                 }
             }
         }
@@ -159,7 +178,8 @@ public class BeaconScanner {
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
-            isScanning = false;
+            Log.e(TAG, "Scan Failed Error Code: " + errorCode);
+            isScanningInternal = false;
             if (beaconScanCallback != null) {
                 beaconScanCallback.onScanFailed(errorCode);
             }
