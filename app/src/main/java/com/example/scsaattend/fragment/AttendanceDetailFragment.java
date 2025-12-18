@@ -323,7 +323,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         if (lower.contains("normal") || lower.contains("정상")) return "출석";
         if (lower.contains("late") || lower.contains("early") || lower.contains("지각") || lower.contains("조퇴")) return "지각/조퇴";
         if (lower.contains("absent") || lower.contains("결석")) return "결석";
-        return status;
+        return "기록 없음";
     }
 
     private String formatShortTime(String time) {
@@ -359,7 +359,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         BatchUpdateRequest request = new BatchUpdateRequest(aInfoIdList, updateData);
         apiService.batchUpdateAttendance(request).enqueue(new Callback<BatchUpdateResponse>() {
             @Override
-            public void onResponse(Call<BatchUpdateResponse> call, Response<BatchUpdateResponse> response) {
+            public void onResponse(@NonNull Call<BatchUpdateResponse> call, @NonNull Response<BatchUpdateResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Toast.makeText(getContext(), response.body().getMessage(), Toast.LENGTH_LONG).show();
                     searchAttendanceData();
@@ -369,7 +369,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
                 exitSelectionMode();
             }
             @Override
-            public void onFailure(Call<BatchUpdateResponse> call, Throwable t) {
+            public void onFailure(@NonNull Call<BatchUpdateResponse> call, @NonNull Throwable t) {
                 Toast.makeText(getContext(), "네트워크 오류", Toast.LENGTH_SHORT).show();
                 exitSelectionMode();
             }
@@ -499,9 +499,29 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
                     tvCheckIn.setText(formattedIn.length() >= 5 ? formattedIn.substring(0, 5) : "-");
                     tvCheckOut.setText(formattedOut.length() >= 5 ? formattedOut.substring(0, 5) : "-");
                     tvPublicLeave.setText(item.publicLeave != null ? ("Y".equals(item.publicLeave) ? "O" : "X") : "-");
-                    tvStatus.setText(fragment.getKoreanStatus(item.status));
-                    tvStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), "normal".equals(item.status) ? R.color.status_text_normal : ("absent".equals(item.status) ? R.color.status_text_absent : R.color.status_text_late_early)));
-                    tvApproval.setText("approved".equalsIgnoreCase(item.approval) ? "승인" : ("denied".equalsIgnoreCase(item.approval) ? "불허" : "-"));
+                    
+                    String koreanStatus = fragment.getKoreanStatus(item.status);
+                    tvStatus.setText(koreanStatus);
+                    
+                    if ("기록 없음".equals(koreanStatus)) {
+                        tvStatus.setTextColor(Color.GRAY);
+                    } else {
+                        tvStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), 
+                            "normal".equals(item.status) ? R.color.status_text_normal : 
+                            ("absent".equals(item.status) ? R.color.status_text_absent : R.color.status_text_late_early)));
+                    }
+                    
+                    String approval = item.approval != null ? item.approval : "";
+                    if ("approved".equalsIgnoreCase(approval)) {
+                        tvApproval.setText("승인");
+                        tvApproval.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.status_approved));
+                    } else if ("denied".equalsIgnoreCase(approval)) {
+                        tvApproval.setText("불허");
+                        tvApproval.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.status_rejected));
+                    } else {
+                        tvApproval.setText("-");
+                        tvApproval.setTextColor(Color.BLACK);
+                    }
                 }
             }
         }
