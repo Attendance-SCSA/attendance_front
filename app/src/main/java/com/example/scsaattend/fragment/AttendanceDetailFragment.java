@@ -515,7 +515,6 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
     public void onAttendanceTypeSelected(long typeId, String typeName) {
         Map<String, Object> updateData = new HashMap<>();
         updateData.put("aTypeId", typeId);
-        // 유형 변경 시 출근/퇴근 시간 및 관련 상태들을 명시적으로 null 처리
         updateData.put("arrivalTime", null);
         updateData.put("leavingTime", null);
         updateData.put("status", null);
@@ -661,17 +660,15 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
                 } else {
                     String formattedIn = fragment.formatLongTime(item.checkIn);
                     String formattedOut = fragment.formatLongTime(item.checkOut);
-                    
                     tvCheckIn.setText("-".equals(formattedIn) ? "-" : (formattedIn.length() >= 5 ? formattedIn.substring(0, 5) : formattedIn));
                     tvCheckOut.setText("-".equals(formattedOut) ? "-" : (formattedOut.length() >= 5 ? formattedOut.substring(0, 5) : formattedOut));
-                    
                     tvPublicLeave.setText(item.publicLeave != null ? ("Y".equals(item.publicLeave) ? "O" : "X") : "-");
                     
                     String koreanStatus = fragment.getKoreanStatus(item.status);
                     tvStatus.setText(koreanStatus);
                     
                     if ("기록 없음".equals(koreanStatus)) {
-                        tvStatus.setTextColor(Color.GRAY);
+                        tvStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.gray_text));
                     } else {
                         tvStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), 
                             "normal".equals(item.status) ? R.color.status_text_normal : 
