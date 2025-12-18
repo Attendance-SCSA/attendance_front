@@ -57,7 +57,7 @@ public class RetrofitClient {
     public static Retrofit getClient() {
         if (retrofit == null) {
             Gson gson = new GsonBuilder()
-                    .serializeNulls() // null 값을 직렬화하도록 설정
+                    .serializeNulls()
                     .setLenient()
                     .create();
 

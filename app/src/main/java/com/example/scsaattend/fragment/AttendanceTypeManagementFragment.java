@@ -2,7 +2,6 @@ package com.example.scsaattend.fragment;
 
 import android.app.AlertDialog;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,12 +23,7 @@ import com.example.scsaattend.dto.AttendanceTypeResponse;
 import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -136,9 +130,8 @@ public class AttendanceTypeManagementFragment extends Fragment {
         builder.setView(v);
 
         NumberPicker hp = v.findViewById(R.id.picker_hour), mp = v.findViewById(R.id.picker_minute), sp = v.findViewById(R.id.picker_second);
-        View cbClear = v.findViewById(R.id.cb_clear_time); // 체크박스 참조
+        View cbClear = v.findViewById(R.id.cb_clear_time);
 
-        // 유형 추가 시에는 체크박스를 숨김
         if (cbClear != null) cbClear.setVisibility(View.GONE);
 
         NumberPicker.Formatter fmt = value -> String.format(Locale.getDefault(), "%02d", value);

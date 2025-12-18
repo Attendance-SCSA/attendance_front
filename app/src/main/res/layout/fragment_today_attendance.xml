@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-        <!-- 1. 오늘 날짜 카드 -->
+        <!--  오늘 날짜 카드 -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardDate"
             android:layout_width="match_parent"
@@ -50,7 +50,7 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- 2. 비콘 스캔 카드 -->
+        <!--  비콘 스캔 카드 -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardBeacon"
             android:layout_width="match_parent"
@@ -107,7 +107,7 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- 3. 출근/퇴근 버튼 -->
+        <!--  출근/퇴근 버튼 -->
         <LinearLayout
             android:id="@+id/layoutButtons"
             android:layout_width="match_parent"
@@ -142,7 +142,7 @@
                 android:textStyle="bold"/>
         </LinearLayout>
         
-        <!-- 4. 오늘의 수업 정보 -->
+        <!--  오늘의 수업 정보 -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardClassInfo"
             android:layout_width="match_parent"
@@ -179,7 +179,7 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
         
-        <!-- 5. 오늘의 출결 상태 카드 -->
+        <!--  오늘의 출결 상태 카드 -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardStatus"
             android:layout_width="match_parent"

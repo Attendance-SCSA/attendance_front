@@ -12,7 +12,7 @@ public class SearchAttendanceRequest {
     @SerializedName("endDate")
     private String endDate;
 
-    @SerializedName("memIdList") // Changed from memberIds
+    @SerializedName("memIdList")
     private List<Long> memIdList;
 
     public SearchAttendanceRequest(String startDate, String endDate, List<Long> memIdList) {

@@ -1,8 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+
     <style name="Base.Theme.SCSAattend" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+
     </style>
 
     <style name="Theme.SCSAattend" parent="Base.Theme.SCSAattend" />
@@ -14,7 +13,7 @@
     </style>
 
     <style name="CustomCalendarStyle" parent="Widget.MaterialComponents.MaterialCalendar">
-        <!-- 필요한 경우 캘린더의 다른 속성들을 여기서 커스텀할 수 있습니다. -->
+
     </style>
 
     <style name="HideButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">

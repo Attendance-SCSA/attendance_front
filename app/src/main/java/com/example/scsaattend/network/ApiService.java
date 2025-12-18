@@ -11,9 +11,6 @@ import com.example.scsaattend.dto.CheckOutRequest;
 import com.example.scsaattend.dto.LoginRequest;
 import com.example.scsaattend.dto.LoginResponse;
 import com.example.scsaattend.dto.SearchAttendanceRequest;
-import com.example.scsaattend.dto.MemberRegisterRequest;
-import com.example.scsaattend.dto.MemberResponse;
-import com.example.scsaattend.dto.MemberUpdateRequest;
 import com.example.scsaattend.dto.StatusResponse;
 
 import java.util.List;
