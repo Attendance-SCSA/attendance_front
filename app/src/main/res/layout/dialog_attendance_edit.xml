@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:id="@+id/tvEditTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="출결 정보 수정"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginBottom="16dp"
+            android:gravity="center"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#EEEEEE"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- 기본 정보 -->
+        <TextView
+            android:id="@+id/tvEditDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="날짜 : -"
+            android:textSize="14sp"
+            android:textColor="@color/gray_text"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tvEditTypeName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="유형 : -"
+            android:textSize="14sp"
+            android:textColor="@color/gray_text"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- 출근 시간 (TextView 클릭 시 커스텀 피커 호출) -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="출근 시간"
+            android:textSize="12sp"
+            android:textColor="@color/scsa_blue"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"/>
+        <TextView
+            android:id="@+id/tvEditInTime"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/edit_text_border"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="12dp"
+            android:text="00:00:00"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:layout_marginBottom="12dp"
+            android:clickable="true"
+            android:focusable="true"/>
+
+        <!-- 퇴근 시간 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="퇴근 시간"
+            android:textSize="12sp"
+            android:textColor="@color/scsa_blue"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"/>
+        <TextView
+            android:id="@+id/tvEditOutTime"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/edit_text_border"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="12dp"
+            android:text="00:00:00"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:layout_marginBottom="12dp"
+            android:clickable="true"
+            android:focusable="true"/>
+
+        <!-- 상태 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="출결 상태"
+            android:textSize="12sp"
+            android:textColor="@color/scsa_blue"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"/>
+        <Spinner
+            android:id="@+id/spStatus"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- 승인 여부 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="승인 여부"
+            android:textSize="12sp"
+            android:textColor="@color/scsa_blue"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"/>
+        <Spinner
+            android:id="@+id/spApproval"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- 공결 여부 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="공결 여부"
+            android:textSize="12sp"
+            android:textColor="@color/scsa_blue"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"/>
+        <Spinner
+            android:id="@+id/spOfficial"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- 사유 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="사유 (학생 작성)"
+            android:textSize="12sp"
+            android:textColor="@color/scsa_blue"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"/>
+        <EditText
+            android:id="@+id/etMemNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="80dp"
+            android:gravity="top"
+            android:hint="사유를 입력하세요"
+            android:textSize="14sp"
+            android:background="@drawable/edit_text_border"
+            android:padding="8dp"
+            android:layout_marginBottom="12dp"
+            android:inputType="textMultiLine"/>
+
+        <!-- 관리자 메시지 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="관리자 메시지"
+            android:textSize="12sp"
+            android:textColor="@color/scsa_blue"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"/>
+        <EditText
+            android:id="@+id/etAdminNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="80dp"
+            android:gravity="top"
+            android:hint="관리자 메시지를 입력하세요"
+            android:textSize="14sp"
+            android:background="@drawable/edit_text_border"
+            android:padding="8dp"
+            android:layout_marginBottom="24dp"
+            android:inputType="textMultiLine"/>
+
+        <!-- 버튼 영역 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <Button
+                android:id="@+id/btnEditCancel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="취소"
+                android:backgroundTint="@android:color/darker_gray"
+                android:textColor="@android:color/white"
+                android:layout_marginEnd="8dp"/>
+            <Button
+                android:id="@+id/btnEditSave"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="저장"
+                android:backgroundTint="@color/scsa_blue"
+                android:textColor="@android:color/white"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

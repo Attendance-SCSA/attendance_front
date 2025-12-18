@@ -107,69 +107,7 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- 3. 오늘의 출결 상태 카드 -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="@android:color/white"
-            app:layout_constraintTop_toBottomOf="@id/cardBeacon">
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="10dp">
-
-                <TextView
-                    android:id="@+id/tvStatusTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="오늘의 출결 상태"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/black"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"/>
-
-                <View
-                    android:id="@+id/viewStatusIndicator"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginTop="8dp"
-                    android:background="@drawable/check_in_circle"
-                    android:backgroundTint="@color/attendance_light_green"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvStatusTitle"/>
-
-                <TextView
-                    android:id="@+id/tvCurrentStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="출근"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/black"
-                    app:layout_constraintBottom_toBottomOf="@id/viewStatusIndicator"
-                    app:layout_constraintStart_toEndOf="@id/viewStatusIndicator"
-                    app:layout_constraintTop_toTopOf="@id/viewStatusIndicator"/>
-
-                <!-- 우측 상단 프로필 이미지 (임시) -->
-                <ImageView
-                    android:layout_width="60dp"
-                    android:layout_height="40dp"
-                    app:srcCompat="@drawable/scsa6_icon" 
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"/>
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- 4. 출근/퇴근 버튼 -->
+        <!-- 3. 출근/퇴근 버튼 -->
         <LinearLayout
             android:id="@+id/layoutButtons"
             android:layout_width="match_parent"
@@ -177,7 +115,7 @@
             android:orientation="horizontal"
             android:layout_marginTop="16dp"
             android:weightSum="2"
-            app:layout_constraintTop_toBottomOf="@id/cardStatus">
+            app:layout_constraintTop_toBottomOf="@id/cardBeacon">
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnCheckIn"
@@ -203,93 +141,143 @@
                 android:textSize="18sp"
                 android:textStyle="bold"/>
         </LinearLayout>
-
-        <!-- 5. 오늘의 기록 카드 -->
+        
+        <!-- 4. 오늘의 수업 정보 -->
         <androidx.cardview.widget.CardView
-            android:id="@+id/cardHistory"
+            android:id="@+id/cardClassInfo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:layout_marginBottom="20dp"
             app:cardCornerRadius="20dp"
             app:cardElevation="2dp"
             app:cardBackgroundColor="@android:color/white"
-            app:layout_constraintTop_toBottomOf="@id/layoutButtons"
-            app:layout_constraintBottom_toBottomOf="parent">
-            <!-- 200dp 고정 높이 -->
+            app:layout_constraintTop_toBottomOf="@id/layoutButtons">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="250dp"
+                android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="10dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="오늘의 기록"
+                    android:text="오늘의 수업 정보"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="@color/black"/>
 
-                <!-- 출근 기록 -->
+                <TextView
+                    android:id="@+id/tv_class_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="수업 시간 : --:--:-- ~ --:--:--"
+                    android:textSize="14sp"
+                    android:textColor="@android:color/black"/>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+        
+        <!-- 5. 오늘의 출결 상태 카드 -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@android:color/white"
+            app:layout_constraintTop_toBottomOf="@id/cardClassInfo">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/tvStatusTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="오늘의 출결 상태"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"/>
+
                 <LinearLayout
-                    android:id="@+id/layoutCheckIn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/edit_text_border"
-                    android:backgroundTint="@color/attendance_light_green"
-                    android:padding="12dp"
-                    android:layout_marginTop="12dp">
-                    
-                    <TextView
-                        android:layout_width="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="12dp"
+                    android:weightSum="2">
+
+                    <!-- 출근 상태 -->
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="출근"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:textSize="12sp"/>
-                    
-                    <TextView
-                        android:id="@+id/tvCheckInTime"
-                        android:layout_width="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="출근 상태"
+                            android:textSize="12sp"/>
+
+                        <TextView
+                            android:id="@+id/tv_check_in_status"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="미출근"
+                            android:textSize="16sp"
+                            android:textStyle="bold"/>
+
+                        <TextView
+                            android:id="@+id/tv_check_in_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="--:--"
+                            android:textSize="14sp"/>
+                    </LinearLayout>
+
+                    <!-- 퇴근 상태 -->
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text=""
-                        android:textColor="@color/black"
-                        android:textSize="14sp"
-                        android:layout_marginTop="4dp"/>
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="퇴근 상태"
+                            android:textSize="12sp"/>
+
+                        <TextView
+                            android:id="@+id/tv_check_out_status"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="-"
+                            android:textSize="16sp"
+                            android:textStyle="bold"/>
+
+                        <TextView
+                            android:id="@+id/tv_check_out_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="--:--"
+                            android:textSize="14sp"/>
+                    </LinearLayout>
                 </LinearLayout>
-
-                <!-- 퇴근 기록 -->
-                <LinearLayout
-                    android:id="@+id/layoutCheckOut"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/edit_text_border"
-                    android:backgroundTint="@color/attendance_light_red"
-                    android:padding="12dp"
-                    android:layout_marginTop="12dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="퇴근"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:textSize="12sp"/>
-
-                    <TextView
-                        android:id="@+id/tvCheckOutTime"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=""
-                        android:textColor="@color/black"
-                        android:textSize="14sp"
-                        android:layout_marginTop="4dp"/>
-                </LinearLayout>
-
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 

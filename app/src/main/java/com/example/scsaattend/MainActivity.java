@@ -1,13 +1,17 @@
 package com.example.scsaattend;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.graphics.Insets;
@@ -15,12 +19,26 @@ import androidx.core.view.GravityCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
-import com.example.scsaattend.user.TodayAttendanceFragment;
+import androidx.fragment.app.Fragment;
+
+import com.example.scsaattend.fragment.MemberManagementFragment;
+import com.example.scsaattend.fragment.AttendanceTypeManagementFragment;
+import com.example.scsaattend.fragment.AttendanceDetailFragment;
+import com.example.scsaattend.fragment.MyAttendanceFragment;
+import com.example.scsaattend.fragment.TodayAttendanceFragment;
+import com.example.scsaattend.login.LoginActivity;
+import com.example.scsaattend.network.ApiService;
+import com.example.scsaattend.network.RetrofitClient;
 import com.google.android.material.navigation.NavigationView;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
+    private ApiService apiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,7 +46,8 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        // 시스템 바 인셋 처리
+        apiService = RetrofitClient.getClient().create(ApiService.class);
+
         drawerLayout = findViewById(R.id.drawer_layout);
         ViewCompat.setOnApplyWindowInsetsListener(drawerLayout, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -36,11 +55,9 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
         
-        // 툴바 설정
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         
-        // 툴바 마진 설정
         ViewCompat.setOnApplyWindowInsetsListener(toolbar, (v, insets) -> {
              Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
              android.view.ViewGroup.MarginLayoutParams params = (android.view.ViewGroup.MarginLayoutParams) v.getLayoutParams();
@@ -50,85 +67,102 @@ public class MainActivity extends AppCompatActivity {
         });
 
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         }
 
-        // 저장된 권한(Role) 확인
         SharedPreferences prefs = getSharedPreferences("AuthPrefs", MODE_PRIVATE);
         String role = prefs.getString("user_role", "ROLE_USER");
-        String userId = prefs.getString("user_id", "Unknown User");
         String userName = prefs.getString("user_name", "Unknown Name");
 
-        // 네비게이션 뷰 설정
         NavigationView navigationView = findViewById(R.id.nav_view);
-        
-        // 1. 기존 메뉴 비우기
         navigationView.getMenu().clear();
         
-        // 2. 권한에 따라 다른 메뉴 XML 인플레이트
-        String displayRole;
         if ("ROLE_ADMIN".equals(role)) {
             navigationView.inflateMenu(R.menu.activity_main_drawer_admin);
-            displayRole = "관리자";
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new AttendanceDetailFragment())
+                    .commit();
         } else {
             navigationView.inflateMenu(R.menu.activity_main_drawer_user);
-            displayRole = "사용자";
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new TodayAttendanceFragment())
+                    .commit();
         }
 
-        // 3. 초기 설정 (첫 번째 메뉴 선택 및 화면 로드)
         if (navigationView.getMenu().size() > 0) {
             MenuItem firstItem = navigationView.getMenu().getItem(0);
-            
-            // 툴바 제목을 첫 번째 메뉴의 이름으로 설정
             if (getSupportActionBar() != null) {
                 getSupportActionBar().setTitle(firstItem.getTitle());
             }
             firstItem.setChecked(true);
-            
-            // 사용자인 경우 첫 화면으로 '오늘의 출결' 프래그먼트 표시
-            if ("ROLE_USER".equals(role)) {
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, new TodayAttendanceFragment())
-                        .commit();
-            }
         }
 
-        // 메뉴 아이템 클릭 리스너 설정
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
-            
-            // 툴바 제목을 클릭한 메뉴의 이름으로 변경
+            Fragment fragment = null;
+
+            if (id == R.id.nav_admin_detail) {
+                fragment = new AttendanceDetailFragment();
+            } else if (id == R.id.nav_user_today) {
+                fragment = new TodayAttendanceFragment();
+            } else if (id == R.id.nav_user_my_status) {
+                fragment = new MyAttendanceFragment();
+            } else if (id == R.id.nav_admin_member) {
+                fragment = new MemberManagementFragment();
+            } else if (id == R.id.nav_admin_type_change) {
+                fragment = new AttendanceTypeManagementFragment();
+            }
+
+            if (fragment != null) {
+                 getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, fragment).commit();
+            }
+
             if (getSupportActionBar() != null) {
                 getSupportActionBar().setTitle(item.getTitle());
             }
-            
-            // "오늘의 출결" 메뉴 클릭 시 프래그먼트 교체
-            if (id == R.id.nav_user_today) {
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, new TodayAttendanceFragment())
-                        .commit();
-            } 
-            // 다른 메뉴에 대한 프래그먼트 교체 로직은 여기에 추가하면 됩니다.
-            // else if (id == R.id.nav_user_my_status) { ... }
             
             drawerLayout.closeDrawer(GravityCompat.END);
             return true;
         });
 
-        // 헤더 뷰 업데이트
+        // 로그아웃 버튼 설정
+        Button btnLogout = findViewById(R.id.btn_logout);
+        if (btnLogout != null) {
+            btnLogout.setOnClickListener(v -> performLogout());
+        }
+
         View headerView = navigationView.getHeaderView(0);
         TextView navHeaderTitle = headerView.findViewById(R.id.tv_nav_header_title);
         TextView navHeaderSubtitle = headerView.findViewById(R.id.tv_nav_header_subtitle);
 
-        if(navHeaderTitle != null) navHeaderTitle.setText(userName); // 사용자 이름
-        if(navHeaderSubtitle != null) navHeaderSubtitle.setText(displayRole); // ROLE_ADMIN -> 관리자
+        if(navHeaderTitle != null) navHeaderTitle.setText(userName);
+        // 서버 역할 정보(ROLE_ADMIN)와 일치하도록 수정
+        if(navHeaderSubtitle != null) navHeaderSubtitle.setText("ROLE_ADMIN".equals(role) ? "관리자" : "사용자");
+    }
 
-        // 헤더 클릭 시 정보 출력 (필요 시 주석 해제)
-        /*
-        headerView.setOnClickListener(v -> {
-            Toast.makeText(MainActivity.this, "이름: " + userName + "\nRole: " + displayRole, Toast.LENGTH_LONG).show();
+    private void performLogout() {
+        apiService.logout().enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                clearDataAndMoveToLogin();
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                clearDataAndMoveToLogin();
+            }
         });
-        */
+    }
+
+    private void clearDataAndMoveToLogin() {
+        SharedPreferences prefs = getSharedPreferences("AuthPrefs", MODE_PRIVATE);
+        prefs.edit().clear().apply(); 
+
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     @Override
@@ -140,12 +174,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-
-        if (id == android.R.id.home) {
-            onBackPressed(); 
-            return true;
-        }
-        
         if (id == R.id.action_menu) {
             if (drawerLayout.isDrawerOpen(GravityCompat.END)) {
                 drawerLayout.closeDrawer(GravityCompat.END);

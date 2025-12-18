@@ -16,9 +16,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("https://jitpack.io") } // JitPack 추가
     }
 }
 
 rootProject.name = "SCSAattend"
 include(":app")
- 

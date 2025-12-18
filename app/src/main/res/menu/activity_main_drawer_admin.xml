@@ -2,10 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_admin_today"
-            android:icon="@android:drawable/ic_menu_today"
-            android:title="@string/menu_admin_today" />
-        <item
             android:id="@+id/nav_admin_detail"
             android:icon="@android:drawable/ic_menu_agenda"
             android:title="@string/menu_admin_detail" />
@@ -13,10 +9,6 @@
             android:id="@+id/nav_admin_member"
             android:icon="@android:drawable/ic_menu_myplaces"
             android:title="@string/menu_admin_member" />
-        <item
-            android:id="@+id/nav_admin_approval"
-            android:icon="@android:drawable/ic_menu_add"
-            android:title="@string/menu_admin_approval" />
         <item
             android:id="@+id/nav_admin_type_change"
             android:icon="@android:drawable/ic_menu_manage"

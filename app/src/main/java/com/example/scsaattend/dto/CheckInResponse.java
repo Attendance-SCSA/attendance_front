@@ -12,6 +12,9 @@ public class CheckInResponse {
     @SerializedName("status")
     private String status;
 
+    @SerializedName("message")
+    private String message;
+
     public int getAttendanceId() {
         return attendanceId;
     }

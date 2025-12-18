@@ -1,5 +1,7 @@
 package com.example.scsaattend.beacon;
 
+import static com.example.scsaattend.common.Config.TARGET_BEACON_ADDRESS;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -12,16 +14,17 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AppCompatActivity;
+
+import androidx.annotation.RequiresPermission;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,12 +36,14 @@ public class BeaconScanner {
     private BeaconScanCallback beaconScanCallback;
     private static final long SCAN_PERIOD = 10000; // 10초 스캔
 
-    // 타겟 비콘 MAC 주소 (원하는 비콘 주소로 변경 필요)
-    private static final String TARGET_BEACON_ADDRESS = "C3:00:00:1C:65:03"; 
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable timeoutRunnable;
+    private boolean isScanningInternal = false;
 
     public interface BeaconScanCallback {
         void onBeaconFound(BluetoothDevice device, int rssi, byte[] scanRecord);
         void onScanFailed(int errorCode);
+        void onScanTimeout();
     }
 
     public BeaconScanner(Context context, BeaconScanCallback callback) {
@@ -54,12 +59,10 @@ public class BeaconScanner {
         }
     }
     
-    // 블루투스 활성화 확인
     public boolean isBluetoothEnabled() {
         return bluetoothAdapter != null && bluetoothAdapter.isEnabled();
     }
 
-    // 권한 확인 및 요청
     public boolean checkPermissions(Activity activity) {
         String[] permissions;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -101,9 +104,21 @@ public class BeaconScanner {
 
         Log.d(TAG, "Start Scan - Target: " + TARGET_BEACON_ADDRESS);
         
-        // 스캔 필터 설정 (특정 MAC 주소만 검색)
-        // 주의: 일부 기기에서는 MAC 주소 필터링이 제대로 동작하지 않을 수 있어, 필터 없이 스캔 후 onScanResult에서 직접 필터링하는 방식도 고려해야 합니다.
-        // 여기서는 일단 필터를 적용하되, 필터링 문제 가능성을 염두에 둡니다.
+        if (timeoutRunnable != null) {
+            handler.removeCallbacks(timeoutRunnable);
+        }
+
+        timeoutRunnable = () -> {
+            if (isScanningInternal) {
+                Log.d(TAG, "Scan timeout reached");
+                stopScan();
+                if (beaconScanCallback != null) {
+                    beaconScanCallback.onScanTimeout();
+                }
+            }
+        };
+        handler.postDelayed(timeoutRunnable, SCAN_PERIOD);
+
         List<ScanFilter> filters = new ArrayList<>();
         if (TARGET_BEACON_ADDRESS != null && !TARGET_BEACON_ADDRESS.isEmpty()) {
             ScanFilter filter = new ScanFilter.Builder()
@@ -112,28 +127,34 @@ public class BeaconScanner {
             filters.add(filter);
         }
 
-        // 스캔 설정: 저지연 모드 (빠른 검색)
         ScanSettings settings = new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                 .build();
 
+        isScanningInternal = true;
         bluetoothLeScanner.startScan(filters, settings, scanCallback);
     }
 
     @SuppressLint("MissingPermission")
     public void stopScan() {
-        if (bluetoothLeScanner != null) {
+        if (timeoutRunnable != null) {
+            handler.removeCallbacks(timeoutRunnable);
+            timeoutRunnable = null;
+        }
+
+        if (bluetoothLeScanner != null && isScanningInternal) {
             Log.d(TAG, "Stop Scan");
             try {
                 bluetoothLeScanner.stopScan(scanCallback);
-            } catch (IllegalStateException e) {
-                // 이미 스캔이 중지되었거나 블루투스가 꺼진 경우 등 예외 처리
+            } catch (Exception e) {
                 Log.e(TAG, "Stop scan failed: " + e.getMessage());
             }
+            isScanningInternal = false;
         }
     }
 
     private final ScanCallback scanCallback = new ScanCallback() {
+        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
@@ -142,13 +163,8 @@ public class BeaconScanner {
             if (device == null) return;
             
             String deviceAddress = device.getAddress();
-            String deviceName = device.getName();
             int rssi = result.getRssi();
 
-            // 모든 검색된 기기 로그 출력 (디버깅용)
-            Log.d(TAG, "Scanned Device -> Name: " + deviceName + ", Mac: " + deviceAddress + ", RSSI: " + rssi);
-            
-            // 타겟 비콘인지 확인 (필터가 적용되어 있어도 이중 확인)
             if (TARGET_BEACON_ADDRESS.equalsIgnoreCase(deviceAddress)) {
                  Log.d(TAG, "!!! TARGET BEACON FOUND !!!");
                  
@@ -163,6 +179,7 @@ public class BeaconScanner {
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
             Log.e(TAG, "Scan Failed Error Code: " + errorCode);
+            isScanningInternal = false;
             if (beaconScanCallback != null) {
                 beaconScanCallback.onScanFailed(errorCode);
             }

@@ -4,13 +4,10 @@ import com.google.gson.annotations.SerializedName;
 
 public class LoginResponse {
     @SerializedName("id")
-    private int id;
+    private long id;
 
     @SerializedName("loginId")
     private String loginId;
-
-    @SerializedName("loginPwd")
-    private String loginPwd;
 
     @SerializedName("name")
     private String name;
@@ -31,10 +28,6 @@ public class LoginResponse {
         return role;
     }
 
-    public int getId() {
-        return id;
-    }
-
     public String getLoginId() {
         return loginId;
     }
@@ -42,4 +35,6 @@ public class LoginResponse {
     public String getName() {
         return name;
     }
+
+    public long getId() {return id; }
 }
