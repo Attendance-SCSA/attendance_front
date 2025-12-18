@@ -274,21 +274,23 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
             String leavingTimeStr = attendance.getLeavingTime();
             
             if (attendance.getAttendanceType() == null) {
-                updateUIAsNotEntered(); // 출결 유형 정보가 없으면 처리 불가
+                updateUIAsNotEntered(); 
                 return;
             }
-            String classStartTimeStr = attendance.getAttendanceType().getStartTime();
-            String classEndTimeStr = attendance.getAttendanceType().getEndTime();
+            
+            // 수업 시간 포맷팅 (시:분만 표시)
+            String classStartTimeStr = formatToHm(attendance.getAttendanceType().getStartTime());
+            String classEndTimeStr = formatToHm(attendance.getAttendanceType().getEndTime());
 
             // 오늘의 수업 정보 업데이트
             tvClassTime.setText("수업 시간 : " + classStartTimeStr + " ~ " + classEndTimeStr);
 
-            // 출근 상태 업데이트
+            // 출근 상태 업데이트 (시:분:초 표시)
             if (arrivalTimeStr != null) {
-                tvCheckInTime.setText(formatTime(arrivalTimeStr));
+                tvCheckInTime.setText(formatToHms(arrivalTimeStr));
                 try {
                     LocalTime arrivalTime = LocalTime.parse(arrivalTimeStr.substring(11, 19));
-                    LocalTime classStartTime = LocalTime.parse(classStartTimeStr);
+                    LocalTime classStartTime = LocalTime.parse(attendance.getAttendanceType().getStartTime());
                     if (arrivalTime.isAfter(classStartTime)) {
                         tvCheckInStatus.setText("지각");
                         tvCheckInStatus.setTextColor(ContextCompat.getColor(getContext(), R.color.status_text_late_early));
@@ -301,16 +303,16 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
                 }
             } else {
                 tvCheckInStatus.setText("미입력");
-                tvCheckInTime.setText("--:--");
+                tvCheckInTime.setText("--:--:--");
                 tvCheckInStatus.setTextColor(ContextCompat.getColor(getContext(), android.R.color.darker_gray));
             }
 
-            // 퇴근 상태 업데이트
+            // 퇴근 상태 업데이트 (시:분:초 표시)
             if (leavingTimeStr != null) {
-                tvCheckOutTime.setText(formatTime(leavingTimeStr));
+                tvCheckOutTime.setText(formatToHms(leavingTimeStr));
                 try {
                     LocalTime leavingTime = LocalTime.parse(leavingTimeStr.substring(11, 19));
-                    LocalTime classEndTime = LocalTime.parse(classEndTimeStr);
+                    LocalTime classEndTime = LocalTime.parse(attendance.getAttendanceType().getEndTime());
                     if (leavingTime.isBefore(classEndTime)) {
                         tvCheckOutStatus.setText("조퇴");
                         tvCheckOutStatus.setTextColor(ContextCompat.getColor(getContext(), R.color.status_text_late_early));
@@ -323,7 +325,7 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
                 }
             } else {
                 tvCheckOutStatus.setText("미입력");
-                tvCheckOutTime.setText("--:--");
+                tvCheckOutTime.setText("--:--:--");
                 tvCheckOutStatus.setTextColor(ContextCompat.getColor(getContext(), android.R.color.darker_gray));
             }
         });
@@ -334,9 +336,9 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
         getActivity().runOnUiThread(() -> {
             tvClassTime.setText("수업 시간 : 정보 없음");
             tvCheckInStatus.setText("미입력");
-            tvCheckInTime.setText("--:--");
+            tvCheckInTime.setText("--:--:--");
             tvCheckOutStatus.setText("미입력");
-            tvCheckOutTime.setText("--:--");
+            tvCheckOutTime.setText("--:--:--");
             tvCheckInStatus.setTextColor(ContextCompat.getColor(getContext(), android.R.color.darker_gray));
             tvCheckOutStatus.setTextColor(ContextCompat.getColor(getContext(), android.R.color.darker_gray));
         });
@@ -359,9 +361,16 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
         Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
     }
 
-    private String formatTime(String dateTime) {
-        if (dateTime == null || dateTime.length() < 16) return "--:--";
-        return dateTime.substring(11, 16);
+    // HH:mm 포맷용 (수업 시간)
+    private String formatToHm(String time) {
+        if (time == null || time.length() < 5) return "--:--";
+        return time.substring(0, 5);
+    }
+
+    // HH:mm:ss 포맷용 (출/퇴근 시간)
+    private String formatToHms(String dateTime) {
+        if (dateTime == null || dateTime.length() < 19) return "--:--:--";
+        return dateTime.substring(11, 19);
     }
 
     @Override
