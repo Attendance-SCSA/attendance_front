@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="출결 상세 정보"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginBottom="16dp"
+            android:gravity="center"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#EEEEEE"
+            android:layout_marginBottom="20dp"/>
+
+        <TextView
+            android:id="@+id/tvDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="날짜: -"
+            android:textSize="14sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="10dp"/>
+
+        <TextView
+            android:id="@+id/tvType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="유형: -"
+            android:textSize="14sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="10dp"/>
+
+        <TextView
+            android:id="@+id/tvInTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="출근 시간: -"
+            android:textSize="14sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="10dp"/>
+
+        <TextView
+            android:id="@+id/tvOutTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="퇴근 시간: -"
+            android:textSize="14sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="10dp"/>
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="상태: -"
+            android:textSize="14sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="10dp"/>
+
+        <TextView
+            android:id="@+id/tvApproval"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="승인: -"
+            android:textSize="14sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="10dp"/>
+
+        <TextView
+            android:id="@+id/tvOfficial"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="공결: -"
+            android:textSize="14sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="10dp"/>
+
+        <TextView
+            android:id="@+id/tvMemNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="사유: -"
+            android:textSize="14sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="10dp"/>
+
+        <TextView
+            android:id="@+id/tvAdminNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="관리자메세지: -"
+            android:textSize="14sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="24dp"/>
+
+        <Button
+            android:id="@+id/btnClose"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="닫기"
+            android:backgroundTint="@color/scsa_blue"
+            android:textColor="@android:color/white"
+            android:elevation="0dp"
+            app:cornerRadius="8dp"/>
+
+    </LinearLayout>
+</ScrollView>

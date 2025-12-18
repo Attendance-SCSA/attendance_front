@@ -9,11 +9,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import com.example.scsaattend.R;
 import com.example.scsaattend.network.ApiService;
@@ -47,16 +49,17 @@ public class MyAttendanceFragment extends Fragment {
     // 상세 정보 UI
     private View cardDetail;
     private TextView tvSelectedDate, tvDetailCheckIn, tvDetailCheckOut, tvDetailStatus;
+    private Button btnViewDetail;
 
     // 월별 출결 데이터 저장
     private List<AttendanceInfoResponse> monthlyAttendanceList = new ArrayList<>();
     private boolean isInitialLoad = true; 
 
-    // 상태별 색상 (범례와 동일)
+    // 상태별 색상
     private static final int COLOR_NORMAL = Color.parseColor("#A5D6A7"); 
     private static final int COLOR_LATE = Color.parseColor("#FFCC80");   
     private static final int COLOR_ABSENT = Color.parseColor("#EF9A9A");
-    private static final int COLOR_HOLIDAY = Color.parseColor("#E0E0E0"); // 휴일용 연회색
+    private static final int COLOR_HOLIDAY = Color.parseColor("#E0E0E0");
 
     @Nullable
     @Override
@@ -76,6 +79,7 @@ public class MyAttendanceFragment extends Fragment {
         tvDetailCheckIn = view.findViewById(R.id.tvDetailCheckIn);
         tvDetailCheckOut = view.findViewById(R.id.tvDetailCheckOut);
         tvDetailStatus = view.findViewById(R.id.tvDetailStatus);
+        btnViewDetail = view.findViewById(R.id.btnViewDetail);
 
         CalendarDay today = CalendarDay.today();
         calendarView.setSelectedDate(today);
@@ -88,8 +92,117 @@ public class MyAttendanceFragment extends Fragment {
 
         btnPrevMonth.setOnClickListener(v -> calendarView.goToPrevious());
         btnNextMonth.setOnClickListener(v -> calendarView.goToNext());
+        
+        btnViewDetail.setOnClickListener(v -> {
+            CalendarDay selectedDate = calendarView.getSelectedDate();
+            if (selectedDate == null) return;
+
+            String dateStr = String.format(Locale.getDefault(), "%d-%02d-%02d",
+                    selectedDate.getYear(), selectedDate.getMonth(), selectedDate.getDay());
+
+            AttendanceInfoResponse selectedInfo = null;
+            for (AttendanceInfoResponse info : monthlyAttendanceList) {
+                if (dateStr.equals(info.getADate())) {
+                    selectedInfo = info;
+                    break;
+                }
+            }
+
+            if (selectedInfo != null) {
+                showDetailDialog(selectedInfo);
+            } else {
+                Toast.makeText(getContext(), "해당 날짜의 상세 데이터가 없습니다.", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         return view;
+    }
+
+    private void showDetailDialog(AttendanceInfoResponse info) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_attendance_detail_simple, null);
+        builder.setView(dialogView);
+
+        TextView tvTitle = dialogView.findViewById(R.id.tvTitle);
+        TextView tvDate = dialogView.findViewById(R.id.tvDate);
+        TextView tvType = dialogView.findViewById(R.id.tvType);
+        TextView tvInTime = dialogView.findViewById(R.id.tvInTime);
+        TextView tvOutTime = dialogView.findViewById(R.id.tvOutTime);
+        TextView tvStatus = dialogView.findViewById(R.id.tvStatus);
+        TextView tvApproval = dialogView.findViewById(R.id.tvApproval);
+        TextView tvOfficial = dialogView.findViewById(R.id.tvOfficial);
+        TextView tvMemNote = dialogView.findViewById(R.id.tvMemNote);
+        TextView tvAdminNote = dialogView.findViewById(R.id.tvAdminNote);
+        Button btnClose = dialogView.findViewById(R.id.btnClose);
+
+        tvTitle.setText(info.getMember().getName() + "님 출결 상세");
+        
+        // 날짜
+        tvDate.setText("날짜 : " + info.getADate());
+        
+        // 유형 : 이름 (수업시작 : HH:mm / 수업종료 : HH:mm)
+        String typeInfo = "-";
+        if (info.getAttendanceType() != null) {
+            String startTime = formatShortTime(info.getAttendanceType().getStartTime());
+            String endTime = formatShortTime(info.getAttendanceType().getEndTime());
+            typeInfo = info.getAttendanceType().getName() + " (수업시작 : " + startTime + " / 수업종료 : " + endTime + ")";
+        }
+        tvType.setText("유형 : " + typeInfo);
+        
+        // 출근/퇴근 시간 : HH:mm:SS
+        tvInTime.setText("출근 시간 : " + formatLongTime(info.getArrivalTime()));
+        tvOutTime.setText("퇴근 시간 : " + formatLongTime(info.getLeavingTime()));
+        
+        // 상태 (휴일인 경우 휴일)
+        if ("Y".equalsIgnoreCase(info.getIsOff())) {
+            tvStatus.setText("상태 : 휴일");
+        } else {
+            tvStatus.setText("상태 : " + getKoreanStatus(info.getStatus()));
+        }
+        
+        // 승인 : 승인, 불허, 미정(-)
+        String approvalStr = "-";
+        if ("approved".equalsIgnoreCase(info.getIsApproved())) approvalStr = "승인";
+        else if ("denied".equalsIgnoreCase(info.getIsApproved())) approvalStr = "불허";
+        tvApproval.setText("승인 : " + approvalStr);
+        
+        // 공결 : O, X, -
+        String officialStr = "-";
+        if ("Y".equalsIgnoreCase(info.getIsOfficial())) officialStr = "O";
+        else if ("N".equalsIgnoreCase(info.getIsOfficial())) officialStr = "X";
+        tvOfficial.setText("공결 : " + officialStr);
+        
+        // 사유 및 관리자 메세지
+        tvMemNote.setText("사유 : " + (info.getMemNote() != null ? info.getMemNote() : "-"));
+        tvAdminNote.setText("관리자메세지 : " + (info.getAdminNote() != null ? info.getAdminNote() : "-"));
+
+        AlertDialog dialog = builder.create();
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
+    }
+
+    private String getKoreanStatus(String status) {
+        if (status == null) return "기록 없음";
+        String lower = status.toLowerCase();
+        if (lower.contains("normal") || lower.contains("정상")) return "출석";
+        if (lower.contains("late") || lower.contains("early") || lower.contains("지각") || lower.contains("조퇴")) return "지각/조퇴";
+        if (lower.contains("absent") || lower.contains("결석")) return "결석";
+        return status;
+    }
+
+    private String formatShortTime(String time) {
+        if (time == null || time.length() < 5) return "-";
+        return time.substring(0, 5); // HH:mm
+    }
+
+    private String formatLongTime(String time) {
+        if (time == null || !time.contains("T")) return "-";
+        try {
+            // T 이후부터 8자리 (HH:mm:SS)
+            return time.substring(11, 19);
+        } catch (Exception e) {
+            return "-";
+        }
     }
 
     private void setupCalendarListeners() {
@@ -234,7 +347,6 @@ public class MyAttendanceFragment extends Fragment {
 
         if (selectedInfo != null) {
             if ("Y".equalsIgnoreCase(selectedInfo.getIsOff())) {
-                // 휴일인 경우 시간은 대시(-)로, 상태는 "휴일"로 표시
                 tvDetailCheckIn.setText("-");
                 tvDetailCheckOut.setText("-");
                 tvDetailStatus.setText("휴일");
