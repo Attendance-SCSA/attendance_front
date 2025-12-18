@@ -131,7 +131,6 @@ public class AttendanceTypeSelectionDialogFragment extends DialogFragment {
             holder.tvEndClassTime.setText(formatTime(item.getEndTime()));
             holder.tvEndWorkTime.setText(formatTime(item.getLatestTime()));
 
-            // 삭제 버튼은 선택 다이얼로그에서는 필요 없으므로 숨김
             holder.btnDeleteType.setVisibility(View.GONE);
 
             holder.itemView.setOnClickListener(v -> {

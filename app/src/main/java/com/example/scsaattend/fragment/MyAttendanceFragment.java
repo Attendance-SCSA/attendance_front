@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -64,7 +63,6 @@ public class MyAttendanceFragment extends Fragment {
     private static final int COLOR_LATE = Color.parseColor("#FFCC80");   
     private static final int COLOR_ABSENT = Color.parseColor("#EF9A9A");
     private static final int COLOR_HOLIDAY = Color.parseColor("#E0E0E0");
-    // gray_text(#757575)와 일치시킴
     private static final int COLOR_DISABLED = Color.parseColor("#757575");
 
     @Nullable
@@ -154,7 +152,6 @@ public class MyAttendanceFragment extends Fragment {
         etMemNote.setText(info.getMemNote() != null ? info.getMemNote() : "");
         etAdminNote.setText(info.getAdminNote() != null ? info.getAdminNote() : "");
 
-        // 학생 권한: 회색으로 통일
         boolean isAdmin = "ROLE_ADMIN".equals(userRole);
         tvInTime.setEnabled(false); tvInTime.setTextColor(COLOR_DISABLED);
         tvOutTime.setEnabled(false); tvOutTime.setTextColor(COLOR_DISABLED);
@@ -163,7 +160,7 @@ public class MyAttendanceFragment extends Fragment {
         spOfficial.setEnabled(false);
         etAdminNote.setEnabled(false); etAdminNote.setTextColor(COLOR_DISABLED);
         tvType.setTextColor(COLOR_DISABLED);
-        tvDate.setTextColor(COLOR_DISABLED); // 날짜 색상도 통일
+        tvDate.setTextColor(COLOR_DISABLED);
 
         etMemNote.setEnabled(true);
         etMemNote.setTextColor(Color.BLACK);

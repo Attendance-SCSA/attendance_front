@@ -54,12 +54,5 @@ public class AttendanceInfoResponse {
     public String getMemNote() { return memNote; }
     public String getAdminNote() { return adminNote; }
 
-    // Setters (필요한 것들 위주로 추가)
     public void setMemNote(String memNote) { this.memNote = memNote; }
-    public void setAdminNote(String adminNote) { this.adminNote = adminNote; }
-    public void setStatus(String status) { this.status = status; }
-    public void setArrivalTime(String arrivalTime) { this.arrivalTime = arrivalTime; }
-    public void setLeavingTime(String leavingTime) { this.leavingTime = leavingTime; }
-    public void setIsApproved(String isApproved) { this.isApproved = isApproved; }
-    public void setIsOfficial(String isOfficial) { this.isOfficial = isOfficial; }
 }

@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -63,7 +62,7 @@ public class LoginActivity extends AppCompatActivity {
                         editor.putString("user_id", loginResponse.getLoginId());
                         editor.putString("user_name", loginResponse.getName());
                         editor.putLong("user_numeric_id", loginResponse.getId());
-                        editor.commit(); // Use commit() for synchronous save
+                        editor.commit();
 
                         Toast.makeText(LoginActivity.this, "로그인 성공!", Toast.LENGTH_SHORT).show();
 

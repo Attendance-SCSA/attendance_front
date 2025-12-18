@@ -3,13 +3,11 @@ package com.example.scsaattend;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -137,7 +135,6 @@ public class MainActivity extends AppCompatActivity {
         TextView navHeaderSubtitle = headerView.findViewById(R.id.tv_nav_header_subtitle);
 
         if(navHeaderTitle != null) navHeaderTitle.setText(userName);
-        // 서버 역할 정보(ROLE_ADMIN)와 일치하도록 수정
         if(navHeaderSubtitle != null) navHeaderSubtitle.setText("ROLE_ADMIN".equals(role) ? "관리자" : "사용자");
     }
 
@@ -184,13 +181,5 @@ public class MainActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-    
-    @Override
-    public void onBackPressed() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.END)) {
-            drawerLayout.closeDrawer(GravityCompat.END);
-        } else {
-            super.onBackPressed();
-        }
-    }
+
 }

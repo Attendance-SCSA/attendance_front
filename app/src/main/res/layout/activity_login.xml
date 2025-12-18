@@ -7,9 +7,6 @@
     android:background="@color/white"
     tools:context=".login.LoginActivity">
 
-    <!-- 1. 이미지 뷰: 부모의 상단에 고정 -->
-
-    <!-- 2. 타이틀 텍스트: 이미지 뷰 바로 아래에 배치 -->
     <ImageView
         android:id="@+id/imageView5"
         android:layout_width="287dp"
@@ -34,7 +31,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageView5" />
 
-    <!-- 3. 아이디 입력창: 타이틀 텍스트 아래에 배치 -->
     <EditText
         android:id="@+id/idInput"
         android:layout_width="0dp"
@@ -51,7 +47,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/titleText" />
 
-    <!-- 4. 비밀번호 입력창: 아이디 입력창 아래에 배치 -->
     <EditText
         android:id="@+id/passwordInput"
         android:layout_width="0dp"
@@ -67,7 +62,6 @@
         app:layout_constraintStart_toStartOf="@+id/idInput"
         app:layout_constraintTop_toBottomOf="@+id/idInput" />
 
-    <!-- 5. 로그인 버튼: 비밀번호 입력창 아래에 배치 -->
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/loginButton"
         android:layout_width="0dp"

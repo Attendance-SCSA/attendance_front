@@ -3,7 +3,6 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Warm Colors -->
     <color name="warm_primary">#D84315</color>
     <color name="warm_on_primary">#FFFFFF</color>
     <color name="warm_primary_container">#FFDBCF</color>
@@ -16,18 +15,15 @@
 
     <color name="scsa_blue">#2166B0</color>
     <color name="beacon_blue">#2B6CB0</color>
-    
-    <!-- Attendance Colors -->
+
     <color name="attendance_green">#2E7D32</color>
     <color name="attendance_light_green">#C8E6C9</color>
     <color name="attendance_light_red">#FFCDD2</color>
-    
-    <!-- Status Legend Colors -->
+
     <color name="status_normal">#A5D6A7</color> <!-- Green -->
     <color name="status_late">#FFCC80</color>   <!-- Orange -->
     <color name="status_absent">#EF9A9A</color>  <!-- Red -->
-    
-    <!-- 누락되었던 색상 추가 -->
+
     <color name="status_text_normal">#388E3C</color>  <!-- 텍스트용 진한 초록 -->
     <color name="status_text_late_early">#FF8C00</color> <!-- Dark Orange -->
     <color name="status_text_absent">#D32F2F</color>

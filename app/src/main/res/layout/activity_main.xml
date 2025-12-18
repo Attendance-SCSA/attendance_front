@@ -8,7 +8,6 @@
     android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
-    <!-- 메인 콘텐츠 영역 -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -31,7 +30,6 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- 우측 네비게이션 드로어 (커스텀 컨테이너) -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="wrap_content"
         android:layout_height="match_parent"

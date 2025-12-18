@@ -249,7 +249,7 @@
                     android:background="@drawable/bg_status_label"/>
             </LinearLayout>
 
-            <!-- 상세 보기 버튼 (카드의 세로 중앙 정렬) -->
+            <!-- 상세 보기 버튼 -->
             <Button
                 android:id="@+id/btnViewDetail"
                 android:layout_width="wrap_content"
