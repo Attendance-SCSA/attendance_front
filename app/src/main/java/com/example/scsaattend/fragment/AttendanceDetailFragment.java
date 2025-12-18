@@ -383,7 +383,6 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         minutePicker.setMinValue(0); minutePicker.setMaxValue(59); minutePicker.setFormatter(formatter);
         secondPicker.setMinValue(0); secondPicker.setMaxValue(59); secondPicker.setFormatter(formatter);
 
-        // 초기 상태 설정
         String currentTime = targetTextView.getText().toString();
         if ("-".equals(currentTime)) {
             cbClear.setChecked(true);
@@ -394,7 +393,6 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
             secondPicker.setValue(Integer.parseInt(currentTime.substring(6, 8)));
         }
 
-        // 체크박스 상태 변경 시 스피너 활성/비활성 처리
         cbClear.setOnCheckedChangeListener((buttonView, isChecked) -> {
             hourPicker.setEnabled(!isChecked);
             minutePicker.setEnabled(!isChecked);

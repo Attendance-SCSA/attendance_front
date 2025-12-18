@@ -46,6 +46,9 @@ public interface ApiService {
     @PATCH("attendance_info/{aInfoId}")
     Call<BatchUpdateResponse> updateAttendanceDetail(@Path("aInfoId") long aInfoId, @Body Map<String, Object> request);
 
+    @PATCH("attendance_info/{aInfoId}/mem_note")
+    Call<Object> updateMemberNote(@Path("aInfoId") long aInfoId, @Body Map<String, String> request);
+
     @PATCH("attendance_info/{aInfoId}/arrival")
     Call<CheckInApiResponse> checkIn(@Path("aInfoId") int aInfoId, @Body Object emptyBody);
 
