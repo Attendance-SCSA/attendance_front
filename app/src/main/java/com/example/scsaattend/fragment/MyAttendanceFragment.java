@@ -49,6 +49,7 @@ public class MyAttendanceFragment extends Fragment {
 
     // 월별 출결 데이터 저장
     private List<AttendanceInfoResponse> monthlyAttendanceList = new ArrayList<>();
+    private boolean isInitialLoad = true; // 최초 로드 확인용 플래그
 
     // 상태별 색상
     private static final int COLOR_NORMAL = Color.parseColor("#A5D6A7"); 
@@ -81,6 +82,7 @@ public class MyAttendanceFragment extends Fragment {
         calendarView.setCurrentDate(today);
 
         // 초기 설정
+        isInitialLoad = true; // 프래그먼트 생성 시 초기화
         updateMonthDisplay();
         setupCalendarListeners();
         fetchMonthlyAttendance();
@@ -155,10 +157,13 @@ public class MyAttendanceFragment extends Fragment {
                     monthlyAttendanceList = response.body(); // 월별 데이터 저장
                     updateCalendarDecorators(monthlyAttendanceList);
 
-                    // 선택된 날짜(기본값 오늘)의 상세 정보 업데이트
-                    CalendarDay selectedDate = calendarView.getSelectedDate();
-                    if (selectedDate != null) {
-                        updateDetailCard(selectedDate);
+                    // 최초 실행 시에만 오늘 날짜 정보를 표시
+                    if (isInitialLoad) {
+                        CalendarDay selectedDate = calendarView.getSelectedDate();
+                        if (selectedDate != null) {
+                            updateDetailCard(selectedDate);
+                        }
+                        isInitialLoad = false; // 이후 월 변경(슬라이드) 시에는 카드를 건드리지 않음
                     }
                 } else {
                     Log.e(TAG, "Failed to fetch attendance: " + response.code());
@@ -180,6 +185,8 @@ public class MyAttendanceFragment extends Fragment {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
         for (AttendanceInfoResponse info : list) {
+            if ("Y".equalsIgnoreCase(info.getIsOff())) continue;
+
             try {
                 String dateString = info.getADate();
                 if (dateString == null) continue;
@@ -221,7 +228,6 @@ public class MyAttendanceFragment extends Fragment {
     }
     
     private void updateDetailCard(CalendarDay date) {
-        // 직접 년, 월, 일을 받아서 "yyyy-MM-dd" 형식으로 만듭니다.
         String selectedDateStr = String.format(Locale.getDefault(), "%d-%02d-%02d",
                 date.getYear(),
                 date.getMonth(),
@@ -229,7 +235,6 @@ public class MyAttendanceFragment extends Fragment {
 
         tvSelectedDate.setText(selectedDateStr);
 
-        // 저장된 리스트에서 해당 날짜 정보 찾기
         AttendanceInfoResponse selectedInfo = null;
         for (AttendanceInfoResponse info : monthlyAttendanceList) {
             if (selectedDateStr.equals(info.getADate())) {
@@ -239,18 +244,38 @@ public class MyAttendanceFragment extends Fragment {
         }
 
         if (selectedInfo != null) {
-            String inTime = selectedInfo.getArrivalTime();
-            String outTime = selectedInfo.getLeavingTime();
-            
-            // 시간 포맷팅
-            if (inTime != null && inTime.contains("T")) inTime = inTime.substring(11, 19); 
-            if (outTime != null && outTime.contains("T")) outTime = outTime.substring(11, 19);
+            if ("Y".equalsIgnoreCase(selectedInfo.getIsOff())) {
+                tvDetailCheckIn.setText("-");
+                tvDetailCheckOut.setText("-");
+                tvDetailStatus.setText("휴일");
+            } else {
+                String inTime = selectedInfo.getArrivalTime();
+                String outTime = selectedInfo.getLeavingTime();
+                
+                if (inTime != null && inTime.contains("T")) inTime = inTime.substring(11, 19); 
+                if (outTime != null && outTime.contains("T")) outTime = outTime.substring(11, 19);
 
-            tvDetailCheckIn.setText(inTime != null ? inTime : "-");
-            tvDetailCheckOut.setText(outTime != null ? outTime : "-");
-            tvDetailStatus.setText(selectedInfo.getStatus() != null ? selectedInfo.getStatus() : "기록 없음");
+                tvDetailCheckIn.setText(inTime != null ? inTime : "-");
+                tvDetailCheckOut.setText(outTime != null ? outTime : "-");
+
+                String status = selectedInfo.getStatus();
+                String displayStatus = "기록 없음";
+                if (status != null) {
+                    String lowerStatus = status.toLowerCase();
+                    if (lowerStatus.contains("normal") || lowerStatus.contains("정상")) {
+                        displayStatus = "출석";
+                    } else if (lowerStatus.contains("late") || lowerStatus.contains("early") || 
+                               lowerStatus.contains("지각") || lowerStatus.contains("조퇴")) {
+                        displayStatus = "지각/조퇴";
+                    } else if (lowerStatus.contains("absent") || lowerStatus.contains("결석")) {
+                        displayStatus = "결석";
+                    } else {
+                        displayStatus = status;
+                    }
+                }
+                tvDetailStatus.setText(displayStatus);
+            }
         } else {
-            // 해당 날짜에 데이터가 없는 경우
             tvDetailCheckIn.setText("-");
             tvDetailCheckOut.setText("-");
             tvDetailStatus.setText("기록 없음");
