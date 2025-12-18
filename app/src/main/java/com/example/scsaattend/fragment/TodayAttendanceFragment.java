@@ -4,11 +4,14 @@ import android.Manifest;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -43,14 +46,17 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
     private static final String TAG = "TodayAttendanceFragment";
     private BeaconScanner beaconScanner;
     private TextView tvConnectedBeacon;
+    private Button btnScanBeacon; // 버튼을 멤버 변수로 승격
     private boolean isScanning = false;
     private ApiService apiService;
 
-    // UI 요소
     private TextView tvCheckInStatus, tvCheckInTime, tvCheckOutStatus, tvCheckOutTime, tvClassTime;
 
     private String lastScannedMacAddress = null;
     private int lastScannedRssi = 0;
+
+    // 비활성 색상
+    private static final int COLOR_DISABLED = Color.parseColor("#BDBDBD");
 
     @Nullable
     @Override
@@ -64,6 +70,8 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
         tvCheckOutStatus = view.findViewById(R.id.tv_check_out_status);
         tvCheckOutTime = view.findViewById(R.id.tv_check_out_time);
         tvClassTime = view.findViewById(R.id.tv_class_time);
+        btnScanBeacon = view.findViewById(R.id.btnScanBeacon);
+        tvConnectedBeacon = view.findViewById(R.id.tvConnectedBeacon);
 
         beaconScanner = new BeaconScanner(getContext(), this);
 
@@ -72,9 +80,6 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy년 MM월 dd일 EEEE", Locale.KOREAN);
             tvTodayDate.setText(sdf.format(new Date()));
         }
-
-        View btnScanBeacon = view.findViewById(R.id.btnScanBeacon);
-        tvConnectedBeacon = view.findViewById(R.id.tvConnectedBeacon);
 
         if (tvConnectedBeacon != null) {
             tvConnectedBeacon.setBackgroundResource(0);
@@ -89,16 +94,16 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
                             Toast.makeText(getContext(), "블루투스를 켜주세요.", Toast.LENGTH_SHORT).show();
                             return;
                         }
-                        Toast.makeText(getContext(), "비콘 스캔 시작...", Toast.LENGTH_SHORT).show();
+                        startBeaconScanUI(); // 스캔 시작 UI 처리
                         beaconScanner.startScan();
                         isScanning = true;
                     } else {
                         Toast.makeText(getContext(), "권한이 필요합니다.", Toast.LENGTH_SHORT).show();
                     }
                 } else {
+                    stopBeaconScanUI(); // 스캔 중지 UI 처리
                     beaconScanner.stopScan();
                     isScanning = false;
-                    Toast.makeText(getContext(), "비콘 스캔 중지됨", Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -128,6 +133,21 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
         fetchTodayAttendance();
 
         return view;
+    }
+
+    // 비콘 스캔 시작 시 UI 업데이트
+    private void startBeaconScanUI() {
+        btnScanBeacon.setText("비콘 스캔중");
+        btnScanBeacon.setEnabled(false);
+        btnScanBeacon.setBackgroundTintList(ColorStateList.valueOf(COLOR_DISABLED));
+        Toast.makeText(getContext(), "비콘 스캔 시작...", Toast.LENGTH_SHORT).show();
+    }
+
+    // 비콘 스캔 종료/복구 시 UI 업데이트
+    private void stopBeaconScanUI() {
+        btnScanBeacon.setText("비콘 스캔하기");
+        btnScanBeacon.setEnabled(true);
+        btnScanBeacon.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.beacon_blue)));
     }
 
     private void requestCheckIn() {
@@ -185,7 +205,7 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
             public void onResponse(Call<CheckInApiResponse> call, Response<CheckInApiResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Toast.makeText(getContext(), "출근 처리되었습니다.", Toast.LENGTH_SHORT).show();
-                    fetchTodayAttendance(); // Refresh UI
+                    fetchTodayAttendance(); 
                 } else {
                     handleApiError(response, "출근 요청 실패");
                 }
@@ -221,7 +241,7 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
             public void onResponse(Call<CheckInApiResponse> call, Response<CheckInApiResponse> response) {
                 if (response.isSuccessful()) {
                     Toast.makeText(getContext(), "퇴근 처리되었습니다.", Toast.LENGTH_SHORT).show();
-                    fetchTodayAttendance(); // Refresh UI
+                    fetchTodayAttendance(); 
                 } else {
                      handleApiError(response, "퇴근 요청 실패");
                 }
@@ -278,14 +298,11 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
                 return;
             }
             
-            // 수업 시간 포맷팅 (시:분만 표시)
             String classStartTimeStr = formatToHm(attendance.getAttendanceType().getStartTime());
             String classEndTimeStr = formatToHm(attendance.getAttendanceType().getEndTime());
 
-            // 오늘의 수업 정보 업데이트
             tvClassTime.setText("수업 시간 : " + classStartTimeStr + " ~ " + classEndTimeStr);
 
-            // 출근 상태 업데이트 (시:분:초 표시)
             if (arrivalTimeStr != null) {
                 tvCheckInTime.setText(formatToHms(arrivalTimeStr));
                 try {
@@ -307,7 +324,6 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
                 tvCheckInStatus.setTextColor(ContextCompat.getColor(getContext(), android.R.color.darker_gray));
             }
 
-            // 퇴근 상태 업데이트 (시:분:초 표시)
             if (leavingTimeStr != null) {
                 tvCheckOutTime.setText(formatToHms(leavingTimeStr));
                 try {
@@ -361,13 +377,11 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
         Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
     }
 
-    // HH:mm 포맷용 (수업 시간)
     private String formatToHm(String time) {
         if (time == null || time.length() < 5) return "--:--";
         return time.substring(0, 5);
     }
 
-    // HH:mm:ss 포맷용 (출/퇴근 시간)
     private String formatToHms(String dateTime) {
         if (dateTime == null || dateTime.length() < 19) return "--:--:--";
         return dateTime.substring(11, 19);
@@ -393,6 +407,8 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
                     tvConnectedBeacon.setBackgroundResource(R.drawable.edit_text_border);
                     tvConnectedBeacon.setBackgroundTintList(getContext().getResources().getColorStateList(R.color.attendance_light_green, null));
                     tvConnectedBeacon.setText("연결된 비콘: " + deviceName + "\n(RSSI: " + rssi + ")");
+                    
+                    stopBeaconScanUI(); // 스캔 완료 시 UI 복구
                     beaconScanner.stopScan();
                     isScanning = false;
                     lastScannedMacAddress = device.getAddress();
@@ -407,6 +423,7 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
         if (getActivity() != null) {
             getActivity().runOnUiThread(() -> {
                 Toast.makeText(getContext(), "스캔 실패: " + errorCode, Toast.LENGTH_LONG).show();
+                stopBeaconScanUI(); // 실패 시 UI 복구
                 isScanning = false;
             });
         }
