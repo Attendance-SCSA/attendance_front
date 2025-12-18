@@ -1,5 +1,7 @@
 package com.example.scsaattend.fragment;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -7,9 +9,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.NumberPicker;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -76,6 +82,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
     private boolean isSelectionMode = false;
     private Set<Long> selectedItems = new HashSet<>();
     private final Gson gson = new Gson();
+    private String userRole;
 
     public AttendanceDetailFragment() {}
 
@@ -87,6 +94,9 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        SharedPreferences prefs = requireActivity().getSharedPreferences("AuthPrefs", Context.MODE_PRIVATE);
+        userRole = prefs.getString("user_role", "ROLE_USER");
 
         btnStartDate = view.findViewById(R.id.btn_start_date);
         btnEndDate = view.findViewById(R.id.btn_end_date);
@@ -288,33 +298,176 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         });
     }
 
-    private void showDetailInfoDialog(AttendanceDetailItem item) {
+    private void showEditDialog(AttendanceDetailItem item) {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        View v = getLayoutInflater().inflate(R.layout.dialog_attendance_detail_simple, null);
+        View v = getLayoutInflater().inflate(R.layout.dialog_attendance_edit, null);
         builder.setView(v);
 
-        ((TextView)v.findViewById(R.id.tvTitle)).setText(item.name + "님 상세");
-        ((TextView)v.findViewById(R.id.tvDate)).setText("날짜 : " + item.fullDate);
-        
-        String typeStr = "-";
-        if (item.atype != null) {
-            typeStr = item.atype.getName() + " (" + formatShortTime(item.atype.getStartTime()) + " ~ " + formatShortTime(item.atype.getEndTime()) + ")";
-        }
-        ((TextView)v.findViewById(R.id.tvType)).setText("유형 : " + typeStr);
-        ((TextView)v.findViewById(R.id.tvInTime)).setText("출근 : " + formatLongTime(item.checkIn));
-        ((TextView)v.findViewById(R.id.tvOutTime)).setText("퇴근 : " + formatLongTime(item.checkOut));
-        ((TextView)v.findViewById(R.id.tvStatus)).setText("상태 : " + ("Y".equalsIgnoreCase(item.isOff) ? "휴일" : getKoreanStatus(item.status)));
-        
-        String appStr = "approved".equalsIgnoreCase(item.approval) ? "승인" : ("denied".equalsIgnoreCase(item.approval) ? "불허" : "-");
-        ((TextView)v.findViewById(R.id.tvApproval)).setText("승인 : " + appStr);
-        String offStr = "Y".equalsIgnoreCase(item.publicLeave) ? "O" : ("N".equalsIgnoreCase(item.publicLeave) ? "X" : "-");
-        ((TextView)v.findViewById(R.id.tvOfficial)).setText("공결 : " + offStr);
-        ((TextView)v.findViewById(R.id.tvMemNote)).setText("사유 : " + (item.memNote != null ? item.memNote : "-"));
-        ((TextView)v.findViewById(R.id.tvAdminNote)).setText("관리자 : " + (item.adminNote != null ? item.adminNote : "-"));
+        AlertDialog dialog = builder.create();
 
-        AlertDialog d = builder.create();
-        v.findViewById(R.id.btnClose).setOnClickListener(view -> d.dismiss());
-        d.show();
+        TextView tvTitle = v.findViewById(R.id.tvEditTitle);
+        TextView tvDate = v.findViewById(R.id.tvEditDate);
+        TextView tvType = v.findViewById(R.id.tvEditTypeName);
+        TextView tvInTime = v.findViewById(R.id.tvEditInTime);
+        TextView tvOutTime = v.findViewById(R.id.tvEditOutTime);
+        Spinner spStatus = v.findViewById(R.id.spStatus);
+        Spinner spApproval = v.findViewById(R.id.spApproval);
+        Spinner spOfficial = v.findViewById(R.id.spOfficial);
+        EditText etMemNote = v.findViewById(R.id.etMemNote);
+        EditText etAdminNote = v.findViewById(R.id.etAdminNote);
+        Button btnCancel = v.findViewById(R.id.btnEditCancel), btnSave = v.findViewById(R.id.btnEditSave);
+
+        tvTitle.setText(item.name + "님 출결 수정");
+        tvDate.setText("날짜 : " + item.fullDate);
+        tvType.setText("유형 : " + (item.atype != null ? item.atype.getName() : "-"));
+
+        tvInTime.setText(formatLongTime(item.checkIn));
+        tvOutTime.setText(formatLongTime(item.checkOut));
+
+        setupStatusSpinner(spStatus, item.status);
+        setupApprovalSpinner(spApproval, item.approval);
+        setupOfficialSpinner(spOfficial, item.publicLeave);
+
+        etMemNote.setText(item.memNote != null ? item.memNote : "");
+        etAdminNote.setText(item.adminNote != null ? item.adminNote : "");
+
+        boolean isAdmin = "ROLE_ADMIN".equals(userRole);
+        
+        tvInTime.setEnabled(isAdmin);
+        tvOutTime.setEnabled(isAdmin);
+        spStatus.setEnabled(isAdmin);
+        spApproval.setEnabled(isAdmin);
+        spOfficial.setEnabled(isAdmin);
+        etAdminNote.setEnabled(isAdmin);
+        etMemNote.setEnabled(!isAdmin);
+
+        if (isAdmin) {
+            tvInTime.setOnClickListener(view -> showCustomTimePicker(tvInTime));
+            tvOutTime.setOnClickListener(view -> showCustomTimePicker(tvOutTime));
+        }
+
+        btnCancel.setOnClickListener(view -> dialog.dismiss());
+        btnSave.setOnClickListener(view -> {
+            Map<String, Object> updateData = new HashMap<>();
+            if (isAdmin) {
+                updateData.put("arrivalTime", tvInTime.getText().toString());
+                updateData.put("leavingTime", tvOutTime.getText().toString());
+                updateData.put("status", getSelectedStatus(spStatus));
+                updateData.put("isApproved", getSelectedApproval(spApproval));
+                updateData.put("isOfficial", getSelectedOfficial(spOfficial));
+                updateData.put("adminNote", etAdminNote.getText().toString());
+            } else {
+                updateData.put("memNote", etMemNote.getText().toString());
+            }
+            saveAttendanceUpdate(item.aInfoId, updateData, dialog);
+        });
+
+        dialog.show();
+    }
+
+    private void showCustomTimePicker(TextView targetTextView) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_custom_time_picker, null);
+        builder.setView(dialogView);
+
+        NumberPicker hourPicker = dialogView.findViewById(R.id.picker_hour);
+        NumberPicker minutePicker = dialogView.findViewById(R.id.picker_minute);
+        NumberPicker secondPicker = dialogView.findViewById(R.id.picker_second);
+
+        NumberPicker.Formatter formatter = value -> String.format(Locale.getDefault(), "%02d", value);
+        hourPicker.setMinValue(0); hourPicker.setMaxValue(23); hourPicker.setFormatter(formatter);
+        minutePicker.setMinValue(0); minutePicker.setMaxValue(59); minutePicker.setFormatter(formatter);
+        secondPicker.setMinValue(0); secondPicker.setMaxValue(59); secondPicker.setFormatter(formatter);
+
+        String currentTime = targetTextView.getText().toString();
+        if (currentTime.length() >= 8 && !currentTime.equals("-")) {
+            hourPicker.setValue(Integer.parseInt(currentTime.substring(0, 2)));
+            minutePicker.setValue(Integer.parseInt(currentTime.substring(3, 5)));
+            secondPicker.setValue(Integer.parseInt(currentTime.substring(6, 8)));
+        }
+
+        builder.setTitle("시간 선택");
+        builder.setPositiveButton("확인", (dialog, which) -> {
+            String time = String.format(Locale.getDefault(), "%02d:%02d:%02d", hourPicker.getValue(), minutePicker.getValue(), secondPicker.getValue());
+            targetTextView.setText(time);
+        });
+        builder.setNegativeButton("취소", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    private void setupStatusSpinner(Spinner sp, String current) {
+        String[] options = {"출석", "지각/조퇴", "결석", "미정"};
+        sp.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, options));
+        if ("normal".equals(current)) sp.setSelection(0);
+        else if ("late/early".equals(current)) sp.setSelection(1);
+        else if ("absent".equals(current)) sp.setSelection(2);
+        else sp.setSelection(3);
+    }
+
+    private String getSelectedStatus(Spinner sp) {
+        int pos = sp.getSelectedItemPosition();
+        if (pos == 0) return "normal";
+        if (pos == 1) return "late/early";
+        if (pos == 2) return "absent";
+        return null; 
+    }
+
+    private void setupApprovalSpinner(Spinner sp, String current) {
+        String[] options = {"승인", "불허", "미정"};
+        sp.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, options));
+        if ("approved".equalsIgnoreCase(current)) sp.setSelection(0);
+        else if ("denied".equalsIgnoreCase(current)) sp.setSelection(1);
+        else sp.setSelection(2);
+    }
+
+    private String getSelectedApproval(Spinner sp) {
+        int pos = sp.getSelectedItemPosition();
+        if (pos == 0) return "approved";
+        if (pos == 1) return "denied";
+        return null;
+    }
+
+    private void setupOfficialSpinner(Spinner sp, String current) {
+        String[] options = {"O (공결)", "X (일반)", "미정"};
+        sp.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, options));
+        if ("Y".equalsIgnoreCase(current)) sp.setSelection(0);
+        else if ("N".equalsIgnoreCase(current)) sp.setSelection(1);
+        else sp.setSelection(2);
+    }
+
+    private String getSelectedOfficial(Spinner sp) {
+        int pos = sp.getSelectedItemPosition();
+        if (pos == 0) return "Y";
+        if (pos == 1) return "N";
+        return null;
+    }
+
+    private void saveAttendanceUpdate(long id, Map<String, Object> data, AlertDialog dialog) {
+        apiService.updateAttendanceDetail(id, data).enqueue(new Callback<BatchUpdateResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<BatchUpdateResponse> call, @NonNull Response<BatchUpdateResponse> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(getContext(), "수정되었습니다.", Toast.LENGTH_SHORT).show();
+                    searchAttendanceData();
+                    dialog.dismiss();
+                } else { handleErrorResponse(response); }
+            }
+            @Override
+            public void onFailure(@NonNull Call<BatchUpdateResponse> call, @NonNull Throwable t) {
+                Toast.makeText(getContext(), "네트워크 오류", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void handleErrorResponse(Response<?> response) {
+        String msg = "실패: " + response.code();
+        if (response.errorBody() != null) {
+            try {
+                ErrorResponse err = gson.fromJson(response.errorBody().string(), ErrorResponse.class);
+                if (err != null && err.getMessage() != null) msg = err.getMessage();
+            } catch (Exception ignored) {}
+        }
+        Toast.makeText(getContext(), msg, Toast.LENGTH_LONG).show();
     }
 
     private String getKoreanStatus(String status) {
@@ -345,34 +498,23 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
     public void onAttendanceTypeSelected(long typeId, String typeName) {
         Map<String, Object> updateData = new HashMap<>();
         updateData.put("aTypeId", typeId);
-        updateData.put("arrivalTime", null);
-        updateData.put("leavingTime", null);
-        updateData.put("status", null);
-        updateData.put("isApproved", null);
-        updateData.put("isOfficial", null);
         onUpdate(updateData);
     }
     
     @Override
     public void onUpdate(Map<String, Object> updateData) {
         List<Long> aInfoIdList = new ArrayList<>(selectedItems);
-        BatchUpdateRequest request = new BatchUpdateRequest(aInfoIdList, updateData);
-        apiService.batchUpdateAttendance(request).enqueue(new Callback<BatchUpdateResponse>() {
+        apiService.batchUpdateAttendance(new BatchUpdateRequest(aInfoIdList, updateData)).enqueue(new Callback<BatchUpdateResponse>() {
             @Override
             public void onResponse(@NonNull Call<BatchUpdateResponse> call, @NonNull Response<BatchUpdateResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Toast.makeText(getContext(), response.body().getMessage(), Toast.LENGTH_LONG).show();
                     searchAttendanceData();
-                } else {
-                    Toast.makeText(getContext(), "업데이트 실패", Toast.LENGTH_SHORT).show();
-                }
+                } else { handleErrorResponse(response); }
                 exitSelectionMode();
             }
             @Override
-            public void onFailure(@NonNull Call<BatchUpdateResponse> call, @NonNull Throwable t) {
-                Toast.makeText(getContext(), "네트워크 오류", Toast.LENGTH_SHORT).show();
-                exitSelectionMode();
-            }
+            public void onFailure(@NonNull Call<BatchUpdateResponse> call, @NonNull Throwable t) { exitSelectionMode(); }
         });
     }
 
@@ -457,7 +599,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
             
             holder.itemView.setOnClickListener(v -> {
                 if(fragment.isSelectionMode) fragment.toggleSelection(holder.getAdapterPosition());
-                else fragment.showDetailInfoDialog(item); 
+                else fragment.showEditDialog(item); 
             });
 
             holder.itemView.setOnLongClickListener(v -> {
@@ -496,8 +638,11 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
                 } else {
                     String formattedIn = fragment.formatLongTime(item.checkIn);
                     String formattedOut = fragment.formatLongTime(item.checkOut);
-                    tvCheckIn.setText(formattedIn.length() >= 5 ? formattedIn.substring(0, 5) : "-");
-                    tvCheckOut.setText(formattedOut.length() >= 5 ? formattedOut.substring(0, 5) : "-");
+                    
+                    // 목록(RecyclerView)에서 대시(-) 처리 로직 보강
+                    tvCheckIn.setText("-".equals(formattedIn) ? "-" : (formattedIn.length() >= 5 ? formattedIn.substring(0, 5) : formattedIn));
+                    tvCheckOut.setText("-".equals(formattedOut) ? "-" : (formattedOut.length() >= 5 ? formattedOut.substring(0, 5) : formattedOut));
+                    
                     tvPublicLeave.setText(item.publicLeave != null ? ("Y".equals(item.publicLeave) ? "O" : "X") : "-");
                     
                     String koreanStatus = fragment.getKoreanStatus(item.status);
