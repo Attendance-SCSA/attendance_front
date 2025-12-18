@@ -137,7 +137,8 @@ public class MainActivity extends AppCompatActivity {
         TextView navHeaderSubtitle = headerView.findViewById(R.id.tv_nav_header_subtitle);
 
         if(navHeaderTitle != null) navHeaderTitle.setText(userName);
-        if(navHeaderSubtitle != null) navHeaderSubtitle.setText("관리자".equals(role) ? "관리자" : "사용자");
+        // 서버 역할 정보(ROLE_ADMIN)와 일치하도록 수정
+        if(navHeaderSubtitle != null) navHeaderSubtitle.setText("ROLE_ADMIN".equals(role) ? "관리자" : "사용자");
     }
 
     private void performLogout() {
@@ -149,7 +150,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
-                // 실패하더라도 로컬 데이터는 지우고 로그아웃 처리
                 clearDataAndMoveToLogin();
             }
         });
@@ -157,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void clearDataAndMoveToLogin() {
         SharedPreferences prefs = getSharedPreferences("AuthPrefs", MODE_PRIVATE);
-        prefs.edit().clear().apply(); // 모든 정보 초기화
+        prefs.edit().clear().apply(); 
 
         Intent intent = new Intent(MainActivity.this, LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
