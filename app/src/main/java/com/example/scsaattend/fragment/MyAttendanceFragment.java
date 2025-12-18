@@ -59,6 +59,7 @@ public class MyAttendanceFragment extends Fragment {
     private static final int COLOR_LATE = Color.parseColor("#FFCC80");   
     private static final int COLOR_ABSENT = Color.parseColor("#EF9A9A");
     private static final int COLOR_HOLIDAY = Color.parseColor("#E0E0E0");
+    private static final int COLOR_DISABLED = Color.parseColor("#BDBDBD"); // 비활성 회색
 
     @Nullable
     @Override
@@ -88,7 +89,6 @@ public class MyAttendanceFragment extends Fragment {
         updateMonthDisplay();
         setupCalendarListeners();
         
-        // 초기 로딩
         fetchMonthlyAttendance(today, false);
 
         btnPrevMonth.setOnClickListener(v -> moveMonth(-1));
@@ -107,8 +107,6 @@ public class MyAttendanceFragment extends Fragment {
 
     private void setupCalendarListeners() {
         calendarView.setTopbarVisible(false); 
-        // 스와이프 이동은 비활성화하거나, 버튼 이동과 동일한 로직을 타게 해야 함
-        // 여기서는 버튼 이동 위주로 처리
         calendarView.setPagingEnabled(false); 
 
         calendarView.setOnDateChangedListener((widget, date, selected) -> {
@@ -230,13 +228,25 @@ public class MyAttendanceFragment extends Fragment {
         if (selectedAttendanceInfo != null) {
             if ("Y".equalsIgnoreCase(selectedAttendanceInfo.getIsOff())) {
                 setDetailText("-", "-", "휴일", COLOR_HOLIDAY);
+                setDetailButtonEnabled(false); 
             } else {
                 String status = getKoreanStatus(selectedAttendanceInfo.getStatus());
                 int color = getStatusColor(status);
                 setDetailText(formatLongTime(selectedAttendanceInfo.getArrivalTime()), formatLongTime(selectedAttendanceInfo.getLeavingTime()), status, color);
+                setDetailButtonEnabled(true); 
             }
         } else {
             setDetailText("-", "-", "기록 없음", Color.TRANSPARENT);
+            setDetailButtonEnabled(false);
+        }
+    }
+
+    private void setDetailButtonEnabled(boolean enabled) {
+        btnViewDetail.setEnabled(enabled);
+        if (enabled) {
+            btnViewDetail.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.scsa_blue)));
+        } else {
+            btnViewDetail.setBackgroundTintList(ColorStateList.valueOf(COLOR_DISABLED));
         }
     }
 

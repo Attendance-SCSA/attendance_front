@@ -24,13 +24,15 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.scsaattend.R;
-import com.example.scsaattend.common.Config;
+import com.example.scsaattend.dto.ErrorResponse;
 import com.example.scsaattend.network.ApiService;
 import com.example.scsaattend.network.RetrofitClient;
 import com.example.scsaattend.dto.MemberRegisterRequest;
 import com.example.scsaattend.dto.MemberResponse;
 import com.example.scsaattend.dto.MemberUpdateRequest;
+import com.google.gson.Gson;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -53,6 +55,7 @@ public class MemberManagementFragment extends Fragment {
     private Button btnAddMember;
     private ApiService apiService;
     private long currentUserId = -1;
+    private final Gson gson = new Gson();
 
     public MemberManagementFragment() {}
 
@@ -75,7 +78,6 @@ public class MemberManagementFragment extends Fragment {
 
         apiService = RetrofitClient.getClient().create(ApiService.class);
 
-        // 현재 로그인한 사용자 ID 가져오기
         SharedPreferences prefs = requireActivity().getSharedPreferences("AuthPrefs", Context.MODE_PRIVATE);
         currentUserId = prefs.getLong("user_numeric_id", -1);
 
@@ -102,17 +104,14 @@ public class MemberManagementFragment extends Fragment {
         Button btnCancel = dialogView.findViewById(R.id.btn_cancel);
         Button btnSubmit = dialogView.findViewById(R.id.btn_submit_add);
 
-        // 회사 목록 스피너 설정
         String[] companies = {"DS", "DX", "SDS"};
         ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, companies);
         spinnerCompany.setAdapter(adapter);
 
-        // 오늘 날짜 기본 설정
         String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
         tvStartDate.setText(today);
         tvEndDate.setText(today);
 
-        // 날짜 선택 리스너 설정
         tvStartDate.setOnClickListener(v -> showDatePicker(tvStartDate, null));
         tvEndDate.setOnClickListener(v -> showDatePicker(tvEndDate, tvStartDate.getText().toString()));
 
@@ -144,9 +143,9 @@ public class MemberManagementFragment extends Fragment {
                     if (response.isSuccessful()) {
                         Toast.makeText(getContext(), "사용자가 추가되었습니다.", Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
-                        loadMembers(); // 목록 갱신
+                        loadMembers();
                     } else {
-                        Toast.makeText(getContext(), "추가 실패: " + response.code(), Toast.LENGTH_SHORT).show();
+                        handleErrorResponse(response);
                     }
                 }
 
@@ -195,7 +194,6 @@ public class MemberManagementFragment extends Fragment {
                 return;
             }
 
-            // 비밀번호 변경 요청
             MemberUpdateRequest request = new MemberUpdateRequest(newPassword, member.getName(), member.getCompany());
             apiService.updateMember(currentUserId, member.getId(), request).enqueue(new Callback<Void>() {
                 @Override
@@ -204,7 +202,7 @@ public class MemberManagementFragment extends Fragment {
                         Toast.makeText(getContext(), "비밀번호가 변경되었습니다.", Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
                     } else {
-                        Toast.makeText(getContext(), "변경 실패: " + response.code(), Toast.LENGTH_SHORT).show();
+                        handleErrorResponse(response);
                     }
                 }
 
@@ -220,14 +218,10 @@ public class MemberManagementFragment extends Fragment {
 
     private void showDatePicker(TextView textView, String minDateString) {
         Calendar calendar = Calendar.getInstance();
-
-        // minDateString이 존재하면, 해당 날짜를 캘린더 초기값으로 설정
         if (minDateString != null && !minDateString.isEmpty()) {
             try {
                 Date minDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(minDateString);
-                if (minDate != null) {
-                    calendar.setTime(minDate);
-                }
+                if (minDate != null) calendar.setTime(minDate);
             } catch (ParseException e) {
                 e.printStackTrace();
             }
@@ -245,22 +239,16 @@ public class MemberManagementFragment extends Fragment {
         if (minDateString != null && !minDateString.isEmpty()) {
             try {
                 Date minDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(minDateString);
-                if (minDate != null) {
-                    datePickerDialog.getDatePicker().setMinDate(minDate.getTime());
-                }
+                if (minDate != null) datePickerDialog.getDatePicker().setMinDate(minDate.getTime());
             } catch (ParseException e) {
                 e.printStackTrace();
             }
         }
-
         datePickerDialog.show();
     }
 
     private void loadMembers() {
-        if (currentUserId == -1) {
-            Toast.makeText(getContext(), "로그인 정보를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        if (currentUserId == -1) return;
 
         apiService.getMembers().enqueue(new Callback<List<MemberResponse>>() {
             @Override
@@ -271,16 +259,7 @@ public class MemberManagementFragment extends Fragment {
                     adapter.notifyDataSetChanged();
                     updateMemberCount();
                 } else {
-                    String errorMsg = "코드: " + response.code();
-                    try {
-                        if (response.errorBody() != null) {
-                            errorMsg += "\n" + response.errorBody().string();
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    Log.e(TAG, "Failed to load members: " + errorMsg);
-                    Toast.makeText(getContext(), "로드 실패: " + errorMsg, Toast.LENGTH_LONG).show();
+                    handleErrorResponse(response);
                 }
             }
 
@@ -305,7 +284,6 @@ public class MemberManagementFragment extends Fragment {
         builder.setView(dialogView);
 
         AlertDialog dialog = builder.create();
-        // 다이얼로그 배경을 투명하게 처리하여 라운드 코너가 잘 보이도록 함 (선택 사항)
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
@@ -330,7 +308,7 @@ public class MemberManagementFragment extends Fragment {
                         updateMemberCount();
                         dialog.dismiss();
                     } else {
-                        Toast.makeText(getContext(), "삭제 실패: " + response.code(), Toast.LENGTH_SHORT).show();
+                        handleErrorResponse(response);
                     }
                 }
 
@@ -343,6 +321,22 @@ public class MemberManagementFragment extends Fragment {
         });
 
         dialog.show();
+    }
+
+    private void handleErrorResponse(Response<?> response) {
+        String message = "작업에 실패했습니다.";
+        if (response.errorBody() != null) {
+            try {
+                String errorBodyString = response.errorBody().string();
+                ErrorResponse errorResponse = gson.fromJson(errorBodyString, ErrorResponse.class);
+                if (errorResponse != null && errorResponse.getMessage() != null) {
+                    message = errorResponse.getMessage();
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "Error parsing error body", e);
+            }
+        }
+        Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
     }
 
     private class MemberAdapter extends RecyclerView.Adapter<MemberAdapter.ViewHolder> {
@@ -377,15 +371,10 @@ public class MemberManagementFragment extends Fragment {
                 holder.tvEducationPeriod.setText("N/A");
             }
 
-            holder.btnEditPassword.setOnClickListener(v -> {
-                showChangePasswordDialog(member);
-            });
-
+            holder.btnEditPassword.setOnClickListener(v -> showChangePasswordDialog(member));
             holder.btnDeleteMember.setOnClickListener(v -> {
                 int currentPos = holder.getAdapterPosition();
-                if (currentPos != RecyclerView.NO_POSITION) {
-                    deleteMember(member, currentPos);
-                }
+                if (currentPos != RecyclerView.NO_POSITION) deleteMember(member, currentPos);
             });
         }
 
