@@ -17,6 +17,7 @@ import com.example.scsaattend.dto.MemberUpdateRequest;
 import com.example.scsaattend.dto.StatusResponse;
 
 import java.util.List;
+import java.util.Map;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -41,6 +42,9 @@ public interface ApiService {
 
     @PATCH("attendance_info")
     Call<BatchUpdateResponse> batchUpdateAttendance(@Body BatchUpdateRequest request);
+
+    @PATCH("attendance_info/{aInfoId}")
+    Call<BatchUpdateResponse> updateAttendanceDetail(@Path("aInfoId") long aInfoId, @Body Map<String, Object> request);
 
     @PATCH("attendance_info/{aInfoId}/arrival")
     Call<CheckInApiResponse> checkIn(@Path("aInfoId") int aInfoId, @Body Object emptyBody);
