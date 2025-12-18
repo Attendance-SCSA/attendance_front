@@ -23,7 +23,6 @@ import com.example.scsaattend.util.EventDecorator;
 import com.prolificinteractive.materialcalendarview.CalendarDay;
 import com.prolificinteractive.materialcalendarview.MaterialCalendarView;
 import com.prolificinteractive.materialcalendarview.OnDateSelectedListener;
-import com.prolificinteractive.materialcalendarview.OnMonthChangedListener;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -75,6 +74,11 @@ public class MyAttendanceFragment extends Fragment {
         tvDetailCheckIn = view.findViewById(R.id.tvDetailCheckIn);
         tvDetailCheckOut = view.findViewById(R.id.tvDetailCheckOut);
         tvDetailStatus = view.findViewById(R.id.tvDetailStatus);
+
+        // 오늘 날짜를 기본 선택으로 설정
+        CalendarDay today = CalendarDay.today();
+        calendarView.setSelectedDate(today);
+        calendarView.setCurrentDate(today);
 
         // 초기 설정
         updateMonthDisplay();
@@ -150,6 +154,12 @@ public class MyAttendanceFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     monthlyAttendanceList = response.body(); // 월별 데이터 저장
                     updateCalendarDecorators(monthlyAttendanceList);
+
+                    // 선택된 날짜(기본값 오늘)의 상세 정보 업데이트
+                    CalendarDay selectedDate = calendarView.getSelectedDate();
+                    if (selectedDate != null) {
+                        updateDetailCard(selectedDate);
+                    }
                 } else {
                     Log.e(TAG, "Failed to fetch attendance: " + response.code());
                 }
@@ -212,10 +222,9 @@ public class MyAttendanceFragment extends Fragment {
     
     private void updateDetailCard(CalendarDay date) {
         // 직접 년, 월, 일을 받아서 "yyyy-MM-dd" 형식으로 만듭니다.
-        // %02d는 10보다 작을 경우 앞에 0을 붙여줍니다 (예: 2023-01-05)
         String selectedDateStr = String.format(Locale.getDefault(), "%d-%02d-%02d",
                 date.getYear(),
-                date.getMonth(), // 버전마다 +1 필요할 수 있음
+                date.getMonth(),
                 date.getDay());
 
         tvSelectedDate.setText(selectedDateStr);
