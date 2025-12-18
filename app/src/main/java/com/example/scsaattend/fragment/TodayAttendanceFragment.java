@@ -33,8 +33,6 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -134,17 +132,14 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
         return view;
     }
 
-    // 긴 메시지도 짤리지 않게 Snackbar로 표시하는 헬퍼 메서드
     private void showFullMessage(String message) {
         if (getView() != null) {
             Snackbar snackbar = Snackbar.make(getView(), message, Snackbar.LENGTH_LONG);
-            // 텍스트뷰를 찾아 최대 줄 수를 늘려줌
             View snackbarView = snackbar.getView();
             TextView textView = snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
             textView.setMaxLines(5); 
             snackbar.show();
         } else {
-            // View를 찾을 수 없는 경우에만 Toast 사용
             Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
         }
     }
@@ -418,6 +413,17 @@ public class TodayAttendanceFragment extends Fragment implements BeaconScanner.B
         if (getActivity() != null) {
             getActivity().runOnUiThread(() -> {
                 showFullMessage("비콘 스캔 실패: " + errorCode);
+                stopBeaconScanUI();
+                isScanning = false;
+            });
+        }
+    }
+
+    @Override
+    public void onScanTimeout() {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> {
+                showFullMessage("비콘을 찾지 못했습니다. 다시 시도해 주세요.");
                 stopBeaconScanUI();
                 isScanning = false;
             });
