@@ -383,12 +383,23 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         minutePicker.setMinValue(0); minutePicker.setMaxValue(59); minutePicker.setFormatter(formatter);
         secondPicker.setMinValue(0); secondPicker.setMaxValue(59); secondPicker.setFormatter(formatter);
 
+        // 초기 상태 설정
         String currentTime = targetTextView.getText().toString();
-        if (currentTime.length() >= 8 && !currentTime.equals("-")) {
+        if ("-".equals(currentTime)) {
+            cbClear.setChecked(true);
+            hourPicker.setEnabled(false); minutePicker.setEnabled(false); secondPicker.setEnabled(false);
+        } else if (currentTime.length() >= 8) {
             hourPicker.setValue(Integer.parseInt(currentTime.substring(0, 2)));
             minutePicker.setValue(Integer.parseInt(currentTime.substring(3, 5)));
             secondPicker.setValue(Integer.parseInt(currentTime.substring(6, 8)));
         }
+
+        // 체크박스 상태 변경 시 스피너 활성/비활성 처리
+        cbClear.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            hourPicker.setEnabled(!isChecked);
+            minutePicker.setEnabled(!isChecked);
+            secondPicker.setEnabled(!isChecked);
+        });
 
         builder.setTitle("시간 선택");
         builder.setPositiveButton("확인", (dialog, which) -> {
