@@ -2,17 +2,21 @@ package com.example.scsaattend.fragment;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import com.example.scsaattend.R;
 import com.example.scsaattend.network.ApiService;
@@ -23,8 +27,6 @@ import com.example.scsaattend.util.EventDecorator;
 import com.prolificinteractive.materialcalendarview.CalendarDay;
 import com.prolificinteractive.materialcalendarview.MaterialCalendarView;
 import com.prolificinteractive.materialcalendarview.OnDateSelectedListener;
-import com.prolificinteractive.materialcalendarview.OnMonthChangedListener;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -41,20 +43,22 @@ public class MyAttendanceFragment extends Fragment {
     private TextView tvCurrentMonth;
     private MaterialCalendarView calendarView;
     private ImageButton btnPrevMonth, btnNextMonth;
-    private Calendar currentCalendar;
+    private ProgressBar pbLoading;
     private ApiService apiService;
+    private Call<List<AttendanceInfoResponse>> currentCall; 
 
-    // 상세 정보 UI
     private View cardDetail;
     private TextView tvSelectedDate, tvDetailCheckIn, tvDetailCheckOut, tvDetailStatus;
+    private Button btnViewDetail;
 
-    // 월별 출결 데이터 저장
     private List<AttendanceInfoResponse> monthlyAttendanceList = new ArrayList<>();
+    private AttendanceInfoResponse selectedAttendanceInfo; 
+    private boolean isInitialLoad = true; 
 
-    // 상태별 색상
     private static final int COLOR_NORMAL = Color.parseColor("#A5D6A7"); 
     private static final int COLOR_LATE = Color.parseColor("#FFCC80");   
     private static final int COLOR_ABSENT = Color.parseColor("#EF9A9A");
+    private static final int COLOR_HOLIDAY = Color.parseColor("#E0E0E0");
 
     @Nullable
     @Override
@@ -62,189 +66,262 @@ public class MyAttendanceFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_my_attendance, container, false);
 
         apiService = RetrofitClient.getClient().create(ApiService.class);
-        currentCalendar = Calendar.getInstance();
 
         tvCurrentMonth = view.findViewById(R.id.tvCurrentMonth);
         calendarView = view.findViewById(R.id.calendarView);
         btnPrevMonth = view.findViewById(R.id.btnPrevMonth);
         btnNextMonth = view.findViewById(R.id.btnNextMonth);
+        pbLoading = view.findViewById(R.id.pbLoading);
         
-        // 상세 정보 UI 연결
         cardDetail = view.findViewById(R.id.cardDetail);
         tvSelectedDate = view.findViewById(R.id.tvSelectedDate);
         tvDetailCheckIn = view.findViewById(R.id.tvDetailCheckIn);
         tvDetailCheckOut = view.findViewById(R.id.tvDetailCheckOut);
         tvDetailStatus = view.findViewById(R.id.tvDetailStatus);
+        btnViewDetail = view.findViewById(R.id.btnViewDetail);
 
-        // 초기 설정
+        CalendarDay today = CalendarDay.today();
+        calendarView.setSelectedDate(today);
+        calendarView.setCurrentDate(today);
+
+        isInitialLoad = true;
         updateMonthDisplay();
         setupCalendarListeners();
-        fetchMonthlyAttendance();
+        
+        // 초기 로딩
+        fetchMonthlyAttendance(today, false);
 
-        btnPrevMonth.setOnClickListener(v -> calendarView.goToPrevious());
-        btnNextMonth.setOnClickListener(v -> calendarView.goToNext());
+        btnPrevMonth.setOnClickListener(v -> moveMonth(-1));
+        btnNextMonth.setOnClickListener(v -> moveMonth(1));
+        
+        btnViewDetail.setOnClickListener(v -> {
+            if (selectedAttendanceInfo != null) {
+                showDetailDialog(selectedAttendanceInfo);
+            } else {
+                Toast.makeText(getContext(), "데이터가 없습니다.", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         return view;
     }
 
     private void setupCalendarListeners() {
         calendarView.setTopbarVisible(false); 
-        
-        // 월 변경 리스너
-        calendarView.setOnMonthChangedListener((widget, date) -> {
-            currentCalendar.set(date.getYear(), date.getMonth() - 1, 1);
-            updateMonthDisplay();
-            fetchMonthlyAttendance();
-        });
+        // 스와이프 이동은 비활성화하거나, 버튼 이동과 동일한 로직을 타게 해야 함
+        // 여기서는 버튼 이동 위주로 처리
+        calendarView.setPagingEnabled(false); 
 
-        // 날짜 선택 리스너
-        calendarView.setOnDateChangedListener(new OnDateSelectedListener() {
-            @Override
-            public void onDateSelected(@NonNull MaterialCalendarView widget, @NonNull CalendarDay date, boolean selected) {
-                if (selected) {
-                    updateDetailCard(date);
-                }
-            }
+        calendarView.setOnDateChangedListener((widget, date, selected) -> {
+            if (selected) updateDetailCard(date);
         });
     }
 
-    private void updateMonthDisplay() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy년 MM월", Locale.KOREAN);
-        CalendarDay currentDate = calendarView.getCurrentDate();
+    private void moveMonth(int offset) {
+        CalendarDay current = calendarView.getCurrentDate();
         Calendar cal = Calendar.getInstance();
-        cal.set(currentDate.getYear(), currentDate.getMonth() - 1, 1);
-        tvCurrentMonth.setText(sdf.format(cal.getTime()));
+        cal.set(current.getYear(), current.getMonth() - 1, 1);
+        cal.add(Calendar.MONTH, offset);
+        
+        CalendarDay targetDay = CalendarDay.from(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, 1);
+        fetchMonthlyAttendance(targetDay, true);
     }
 
-    private void fetchMonthlyAttendance() {
+    private void fetchMonthlyAttendance(CalendarDay targetDate, boolean shouldMove) {
+        if (currentCall != null) currentCall.cancel();
+
         SharedPreferences prefs = requireContext().getSharedPreferences("AuthPrefs", Context.MODE_PRIVATE);
         long memId = prefs.getLong("user_numeric_id", -1);
+        if (memId == -1) return;
 
-        if (memId == -1) {
-            Toast.makeText(getContext(), "로그인 정보를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        pbLoading.setVisibility(View.VISIBLE);
+        setButtonsEnabled(false);
 
-        CalendarDay currentDate = calendarView.getCurrentDate();
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(currentDate.getYear(), currentDate.getMonth() - 1, 1);
+        Calendar cal = Calendar.getInstance();
+        cal.set(targetDate.getYear(), targetDate.getMonth() - 1, 1);
         
-        calendar.set(Calendar.DAY_OF_MONTH, 1);
-        Date startDate = calendar.getTime();
-
-        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-        Date endDate = calendar.getTime();
-
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String strStartDate = sdf.format(startDate);
-        String strEndDate = sdf.format(endDate);
+        String strStartDate = sdf.format(cal.getTime());
+        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+        String strEndDate = sdf.format(cal.getTime());
 
         List<Long> memIdList = new ArrayList<>();
         memIdList.add(memId);
 
         SearchAttendanceRequest request = new SearchAttendanceRequest(strStartDate, strEndDate, memIdList);
-
-        apiService.searchAttendance(request).enqueue(new Callback<List<AttendanceInfoResponse>>() {
+        currentCall = apiService.searchAttendance(request);
+        currentCall.enqueue(new Callback<List<AttendanceInfoResponse>>() {
             @Override
             public void onResponse(Call<List<AttendanceInfoResponse>> call, Response<List<AttendanceInfoResponse>> response) {
+                pbLoading.setVisibility(View.GONE);
+                setButtonsEnabled(true);
+
                 if (response.isSuccessful() && response.body() != null) {
-                    monthlyAttendanceList = response.body(); // 월별 데이터 저장
+                    monthlyAttendanceList = response.body();
                     updateCalendarDecorators(monthlyAttendanceList);
-                } else {
-                    Log.e(TAG, "Failed to fetch attendance: " + response.code());
+                    
+                    if (shouldMove) {
+                        calendarView.setCurrentDate(targetDate);
+                        updateMonthDisplay();
+                    }
+
+                    if (isInitialLoad) {
+                        updateDetailCard(calendarView.getSelectedDate());
+                        isInitialLoad = false;
+                    }
                 }
+                currentCall = null;
             }
 
             @Override
             public void onFailure(Call<List<AttendanceInfoResponse>> call, Throwable t) {
-                Log.e(TAG, "Network Error", t);
+                pbLoading.setVisibility(View.GONE);
+                setButtonsEnabled(true);
+                if (!call.isCanceled()) {
+                    Log.e(TAG, "Error", t);
+                    Toast.makeText(getContext(), "데이터 로드 실패", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
 
-    private void updateCalendarDecorators(List<AttendanceInfoResponse> list) {
-        HashSet<CalendarDay> normalDates = new HashSet<>();
-        HashSet<CalendarDay> lateDates = new HashSet<>();
-        HashSet<CalendarDay> absentDates = new HashSet<>();
+    private void setButtonsEnabled(boolean enabled) {
+        btnPrevMonth.setEnabled(enabled);
+        btnNextMonth.setEnabled(enabled);
+    }
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+    private void updateCalendarDecorators(List<AttendanceInfoResponse> list) {
+        HashSet<CalendarDay> normal = new HashSet<>(), late = new HashSet<>(), absent = new HashSet<>(), holiday = new HashSet<>();
 
         for (AttendanceInfoResponse info : list) {
+            String d = info.getADate();
+            if (d == null || d.length() < 10) continue;
             try {
-                String dateString = info.getADate();
-                if (dateString == null) continue;
-                
-                Date date = sdf.parse(dateString);
-                if (date != null) {
-                    Calendar cal = Calendar.getInstance();
-                    cal.setTime(date);
-                    CalendarDay day = CalendarDay.from(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
-                    
-                    String status = info.getStatus();
-                    if (status != null) {
-                        String lowerStatus = status.toLowerCase();
-                        if (lowerStatus.contains("normal") || lowerStatus.contains("정상")) {
-                            normalDates.add(day);
-                        } else if (lowerStatus.contains("late") || lowerStatus.contains("early") || 
-                                   lowerStatus.contains("지각") || lowerStatus.contains("조퇴")) {
-                            lateDates.add(day);
-                        } else if (lowerStatus.contains("absent") || lowerStatus.contains("결석")) {
-                            absentDates.add(day);
-                        }
-                    }
+                int y = Integer.parseInt(d.substring(0, 4));
+                int m = Integer.parseInt(d.substring(5, 7));
+                int day = Integer.parseInt(d.substring(8, 10));
+                CalendarDay cDay = CalendarDay.from(y, m, day);
+
+                if ("Y".equalsIgnoreCase(info.getIsOff())) holiday.add(cDay);
+                else {
+                    String s = info.getStatus() != null ? info.getStatus().toLowerCase() : "";
+                    if (s.contains("normal") || s.contains("정상")) normal.add(cDay);
+                    else if (s.contains("late") || s.contains("early") || s.contains("지각") || s.contains("조퇴")) late.add(cDay);
+                    else if (s.contains("absent") || s.contains("결석")) absent.add(cDay);
                 }
-            } catch (ParseException e) {
-                Log.e(TAG, "Date parse error: " + info.getADate(), e);
-            }
+            } catch (Exception ignored) {}
         }
 
         calendarView.removeDecorators();
-        if (!normalDates.isEmpty()) {
-            calendarView.addDecorator(new EventDecorator(COLOR_NORMAL, normalDates));
-        }
-        if (!lateDates.isEmpty()) {
-            calendarView.addDecorator(new EventDecorator(COLOR_LATE, lateDates));
-        }
-        if (!absentDates.isEmpty()) {
-            calendarView.addDecorator(new EventDecorator(COLOR_ABSENT, absentDates));
+        List<EventDecorator> decorators = new ArrayList<>();
+        if (!normal.isEmpty()) decorators.add(new EventDecorator(COLOR_NORMAL, normal));
+        if (!late.isEmpty()) decorators.add(new EventDecorator(COLOR_LATE, late));
+        if (!absent.isEmpty()) decorators.add(new EventDecorator(COLOR_ABSENT, absent));
+        if (!holiday.isEmpty()) decorators.add(new EventDecorator(COLOR_HOLIDAY, holiday));
+        calendarView.addDecorators(decorators);
+    }
+
+    private void updateDetailCard(CalendarDay date) {
+        if (date == null) return;
+        String dateStr = formatDate(date);
+        tvSelectedDate.setText(dateStr);
+
+        selectedAttendanceInfo = findInfoByDate(dateStr);
+        
+        if (selectedAttendanceInfo != null) {
+            if ("Y".equalsIgnoreCase(selectedAttendanceInfo.getIsOff())) {
+                setDetailText("-", "-", "휴일", COLOR_HOLIDAY);
+            } else {
+                String status = getKoreanStatus(selectedAttendanceInfo.getStatus());
+                int color = getStatusColor(status);
+                setDetailText(formatLongTime(selectedAttendanceInfo.getArrivalTime()), formatLongTime(selectedAttendanceInfo.getLeavingTime()), status, color);
+            }
+        } else {
+            setDetailText("-", "-", "기록 없음", Color.TRANSPARENT);
         }
     }
-    
-    private void updateDetailCard(CalendarDay date) {
-        // 직접 년, 월, 일을 받아서 "yyyy-MM-dd" 형식으로 만듭니다.
-        // %02d는 10보다 작을 경우 앞에 0을 붙여줍니다 (예: 2023-01-05)
-        String selectedDateStr = String.format(Locale.getDefault(), "%d-%02d-%02d",
-                date.getYear(),
-                date.getMonth(), // 버전마다 +1 필요할 수 있음
-                date.getDay());
 
-        tvSelectedDate.setText(selectedDateStr);
-
-        // 저장된 리스트에서 해당 날짜 정보 찾기
-        AttendanceInfoResponse selectedInfo = null;
-        for (AttendanceInfoResponse info : monthlyAttendanceList) {
-            if (selectedDateStr.equals(info.getADate())) {
-                selectedInfo = info;
-                break;
-            }
-        }
-
-        if (selectedInfo != null) {
-            String inTime = selectedInfo.getArrivalTime();
-            String outTime = selectedInfo.getLeavingTime();
-            
-            // 시간 포맷팅
-            if (inTime != null && inTime.contains("T")) inTime = inTime.substring(11, 19); 
-            if (outTime != null && outTime.contains("T")) outTime = outTime.substring(11, 19);
-
-            tvDetailCheckIn.setText(inTime != null ? inTime : "-");
-            tvDetailCheckOut.setText(outTime != null ? outTime : "-");
-            tvDetailStatus.setText(selectedInfo.getStatus() != null ? selectedInfo.getStatus() : "기록 없음");
+    private void setDetailText(String in, String out, String status, int color) {
+        tvDetailCheckIn.setText(in);
+        tvDetailCheckOut.setText(out);
+        tvDetailStatus.setText(status);
+        if (color != Color.TRANSPARENT) {
+            tvDetailStatus.setBackgroundResource(R.drawable.bg_status_label);
+            tvDetailStatus.setBackgroundTintList(ColorStateList.valueOf(color));
         } else {
-            // 해당 날짜에 데이터가 없는 경우
-            tvDetailCheckIn.setText("-");
-            tvDetailCheckOut.setText("-");
-            tvDetailStatus.setText("기록 없음");
+            tvDetailStatus.setBackground(null);
         }
+    }
+
+    private int getStatusColor(String status) {
+        if ("출석".equals(status)) return COLOR_NORMAL;
+        if ("지각/조퇴".equals(status)) return COLOR_LATE;
+        if ("결석".equals(status)) return COLOR_ABSENT;
+        return Color.TRANSPARENT;
+    }
+
+    private String formatDate(CalendarDay date) {
+        return String.format(Locale.getDefault(), "%d-%02d-%02d", date.getYear(), date.getMonth(), date.getDay());
+    }
+
+    private AttendanceInfoResponse findInfoByDate(String dateStr) {
+        for (AttendanceInfoResponse info : monthlyAttendanceList) {
+            if (dateStr.equals(info.getADate())) return info;
+        }
+        return null;
+    }
+
+    private void updateMonthDisplay() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy년 MM월", Locale.KOREAN);
+        CalendarDay current = calendarView.getCurrentDate();
+        Calendar cal = Calendar.getInstance();
+        cal.set(current.getYear(), current.getMonth() - 1, 1);
+        tvCurrentMonth.setText(sdf.format(cal.getTime()));
+    }
+
+    private String getKoreanStatus(String status) {
+        if (status == null) return "기록 없음";
+        String lower = status.toLowerCase();
+        if (lower.contains("normal") || lower.contains("정상")) return "출석";
+        if (lower.contains("late") || lower.contains("early") || lower.contains("지각") || lower.contains("조퇴")) return "지각/조퇴";
+        if (lower.contains("absent") || lower.contains("결석")) return "결석";
+        return status;
+    }
+
+    private String formatShortTime(String time) {
+        return (time == null || time.length() < 5) ? "-" : time.substring(0, 5);
+    }
+
+    private String formatLongTime(String time) {
+        if (time == null || !time.contains("T")) return "-";
+        try { return time.substring(11, 19); } catch (Exception e) { return "-"; }
+    }
+
+    private void showDetailDialog(AttendanceInfoResponse info) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        View v = getLayoutInflater().inflate(R.layout.dialog_attendance_detail_simple, null);
+        builder.setView(v);
+
+        ((TextView)v.findViewById(R.id.tvTitle)).setText(info.getMember().getName() + "님 상세");
+        ((TextView)v.findViewById(R.id.tvDate)).setText("날짜 : " + info.getADate());
+        
+        String typeStr = "-";
+        if (info.getAttendanceType() != null) {
+            typeStr = info.getAttendanceType().getName() + " (" + formatShortTime(info.getAttendanceType().getStartTime()) + " ~ " + formatShortTime(info.getAttendanceType().getEndTime()) + ")";
+        }
+        ((TextView)v.findViewById(R.id.tvType)).setText("유형 : " + typeStr);
+        ((TextView)v.findViewById(R.id.tvInTime)).setText("출근 : " + formatLongTime(info.getArrivalTime()));
+        ((TextView)v.findViewById(R.id.tvOutTime)).setText("퇴근 : " + formatLongTime(info.getLeavingTime()));
+        ((TextView)v.findViewById(R.id.tvStatus)).setText("상태 : " + ("Y".equalsIgnoreCase(info.getIsOff()) ? "휴일" : getKoreanStatus(info.getStatus())));
+        
+        String appStr = "approved".equalsIgnoreCase(info.getIsApproved()) ? "승인" : ("denied".equalsIgnoreCase(info.getIsApproved()) ? "불허" : "-");
+        ((TextView)v.findViewById(R.id.tvApproval)).setText("승인 : " + appStr);
+        String offStr = "Y".equalsIgnoreCase(info.getIsOfficial()) ? "O" : ("N".equalsIgnoreCase(info.getIsOfficial()) ? "X" : "-");
+        ((TextView)v.findViewById(R.id.tvOfficial)).setText("공결 : " + offStr);
+        ((TextView)v.findViewById(R.id.tvMemNote)).setText("사유 : " + (info.getMemNote() != null ? info.getMemNote() : "-"));
+        ((TextView)v.findViewById(R.id.tvAdminNote)).setText("관리자 : " + (info.getAdminNote() != null ? info.getAdminNote() : "-"));
+
+        AlertDialog d = builder.create();
+        v.findViewById(R.id.btnClose).setOnClickListener(view -> d.dismiss());
+        d.show();
     }
 }

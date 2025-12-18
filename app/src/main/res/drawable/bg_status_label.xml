@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <corners android:radius="12dp" />
+    <solid android:color="@android:color/white" /> <!-- 기본색을 흰색으로 지정 (틴트 적용을 위해) -->
+    <padding
+        android:left="8dp"
+        android:top="2dp"
+        android:right="8dp"
+        android:bottom="2dp" />
+</shape>

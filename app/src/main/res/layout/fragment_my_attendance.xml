@@ -74,6 +74,17 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
+            <!-- 로딩 바 추가 -->
+            <ProgressBar
+                android:id="@+id/pbLoading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:layout_constraintTop_toTopOf="@+id/calendarView"
+                app:layout_constraintBottom_toBottomOf="@+id/calendarView"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
             <View
                 android:id="@+id/divider"
                 android:layout_width="match_parent"
@@ -99,7 +110,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text=" 정상 "
+                    android:text=" 출석 "
                     android:textSize="12sp"
                     android:textColor="@color/black"
                     android:layout_marginEnd="8dp"/>
@@ -145,10 +156,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:padding="16dp">
 
             <TextView
@@ -159,13 +169,17 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/black"
-                android:layout_marginBottom="8dp"/>
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:id="@+id/layoutCheckIn"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginBottom="4dp">
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@+id/tvSelectedDate"
+                app:layout_constraintStart_toStartOf="parent">
                 
                 <TextView
                     android:layout_width="80dp"
@@ -183,10 +197,13 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:id="@+id/layoutCheckOut"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginBottom="4dp">
+                android:layout_marginTop="4dp"
+                app:layout_constraintTop_toBottomOf="@+id/layoutCheckIn"
+                app:layout_constraintStart_toStartOf="parent">
 
                 <TextView
                     android:layout_width="80dp"
@@ -204,9 +221,14 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:id="@+id/layoutStatus"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp"
+                android:gravity="center_vertical"
+                app:layout_constraintTop_toBottomOf="@+id/layoutCheckOut"
+                app:layout_constraintStart_toStartOf="parent">
 
                 <TextView
                     android:layout_width="80dp"
@@ -220,10 +242,26 @@
                     android:layout_height="wrap_content"
                     android:text="-"
                     android:textColor="@color/black"
-                    android:textStyle="bold"/>
+                    android:textStyle="bold"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="2dp"
+                    android:background="@drawable/bg_status_label"/>
             </LinearLayout>
 
-        </LinearLayout>
+            <!-- 상세 보기 버튼 -->
+            <Button
+                android:id="@+id/btnViewDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="상세 보기"
+                android:textSize="12sp"
+                app:backgroundTint="@color/scsa_blue"
+                android:textColor="@android:color/white"
+                app:cornerRadius="10dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

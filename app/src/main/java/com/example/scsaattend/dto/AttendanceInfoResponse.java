@@ -34,6 +34,12 @@ public class AttendanceInfoResponse {
     @SerializedName("aDate")
     private String aDate;
 
+    @SerializedName("memNote")
+    private String memNote;
+
+    @SerializedName("adminNote")
+    private String adminNote;
+
     // Getters
     public long getAinfoId() { return ainfoId; }
     public MemberResponse getMember() { return member; }
@@ -45,4 +51,6 @@ public class AttendanceInfoResponse {
     public String getIsApproved() { return isApproved; }
     public String getIsOfficial() { return isOfficial; }
     public String getADate() { return aDate; }
+    public String getMemNote() { return memNote; }
+    public String getAdminNote() { return adminNote; }
 }
