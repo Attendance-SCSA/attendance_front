@@ -1,13 +1,17 @@
 package com.example.scsaattend;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.graphics.Insets;
@@ -22,17 +26,27 @@ import com.example.scsaattend.fragment.AttendanceTypeManagementFragment;
 import com.example.scsaattend.fragment.AttendanceDetailFragment;
 import com.example.scsaattend.fragment.MyAttendanceFragment;
 import com.example.scsaattend.fragment.TodayAttendanceFragment;
+import com.example.scsaattend.login.LoginActivity;
+import com.example.scsaattend.network.ApiService;
+import com.example.scsaattend.network.RetrofitClient;
 import com.google.android.material.navigation.NavigationView;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
+    private ApiService apiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
+        apiService = RetrofitClient.getClient().create(ApiService.class);
 
         drawerLayout = findViewById(R.id.drawer_layout);
         ViewCompat.setOnApplyWindowInsetsListener(drawerLayout, (v, insets) -> {
@@ -53,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         }
 
         SharedPreferences prefs = getSharedPreferences("AuthPrefs", MODE_PRIVATE);
@@ -63,16 +77,13 @@ public class MainActivity extends AppCompatActivity {
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.getMenu().clear();
         
-        String displayRole;
         if ("ROLE_ADMIN".equals(role)) {
             navigationView.inflateMenu(R.menu.activity_main_drawer_admin);
-            displayRole = "관리자";
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new AttendanceDetailFragment())
                     .commit();
         } else {
             navigationView.inflateMenu(R.menu.activity_main_drawer_user);
-            displayRole = "사용자";
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new TodayAttendanceFragment())
                     .commit();
@@ -115,12 +126,43 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
 
+        // 로그아웃 버튼 설정
+        Button btnLogout = findViewById(R.id.btn_logout);
+        if (btnLogout != null) {
+            btnLogout.setOnClickListener(v -> performLogout());
+        }
+
         View headerView = navigationView.getHeaderView(0);
         TextView navHeaderTitle = headerView.findViewById(R.id.tv_nav_header_title);
         TextView navHeaderSubtitle = headerView.findViewById(R.id.tv_nav_header_subtitle);
 
         if(navHeaderTitle != null) navHeaderTitle.setText(userName);
-        if(navHeaderSubtitle != null) navHeaderSubtitle.setText(displayRole);
+        if(navHeaderSubtitle != null) navHeaderSubtitle.setText("관리자".equals(role) ? "관리자" : "사용자");
+    }
+
+    private void performLogout() {
+        apiService.logout().enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                clearDataAndMoveToLogin();
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                // 실패하더라도 로컬 데이터는 지우고 로그아웃 처리
+                clearDataAndMoveToLogin();
+            }
+        });
+    }
+
+    private void clearDataAndMoveToLogin() {
+        SharedPreferences prefs = getSharedPreferences("AuthPrefs", MODE_PRIVATE);
+        prefs.edit().clear().apply(); // 모든 정보 초기화
+
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     @Override
@@ -132,10 +174,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == android.R.id.home) {
-            onBackPressed(); 
-            return true;
-        }
         if (id == R.id.action_menu) {
             if (drawerLayout.isDrawerOpen(GravityCompat.END)) {
                 drawerLayout.closeDrawer(GravityCompat.END);
