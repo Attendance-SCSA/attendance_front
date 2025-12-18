@@ -34,6 +34,9 @@ public interface ApiService {
     @POST("auth/login")
     Call<LoginResponse> login(@Body LoginRequest request);
 
+    @POST("auth/logout")
+    Call<Void> logout();
+
     @POST("attendance_info/search")
     Call<List<AttendanceInfoResponse>> searchAttendance(@Body SearchAttendanceRequest request);
 

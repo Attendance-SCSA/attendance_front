@@ -64,7 +64,8 @@ public class MyAttendanceFragment extends Fragment {
     private static final int COLOR_LATE = Color.parseColor("#FFCC80");   
     private static final int COLOR_ABSENT = Color.parseColor("#EF9A9A");
     private static final int COLOR_HOLIDAY = Color.parseColor("#E0E0E0");
-    private static final int COLOR_DISABLED = Color.parseColor("#BDBDBD");
+    // gray_text(#757575)와 일치시킴
+    private static final int COLOR_DISABLED = Color.parseColor("#757575");
 
     @Nullable
     @Override
@@ -137,7 +138,6 @@ public class MyAttendanceFragment extends Fragment {
         tvTitle.setText(info.getMember().getName() + "님 출결 상세");
         tvDate.setText("날짜 : " + info.getADate());
         
-        // 유형 정보 세팅
         String typeInfo = "-";
         if (info.getAttendanceType() != null) {
             typeInfo = info.getAttendanceType().getName() + " (" + formatShortTime(info.getAttendanceType().getStartTime()) + " ~ " + formatShortTime(info.getAttendanceType().getEndTime()) + ")";
@@ -147,7 +147,6 @@ public class MyAttendanceFragment extends Fragment {
         tvInTime.setText(formatLongTime(info.getArrivalTime()));
         tvOutTime.setText(formatLongTime(info.getLeavingTime()));
 
-        // 스피너들 초기화 및 값 세팅 (학생은 비활성화 상태로 보게 됨)
         setupStatusSpinner(spStatus, info.getStatus());
         setupApprovalSpinner(spApproval, info.getIsApproved());
         setupOfficialSpinner(spOfficial, info.getIsOfficial());
@@ -155,22 +154,26 @@ public class MyAttendanceFragment extends Fragment {
         etMemNote.setText(info.getMemNote() != null ? info.getMemNote() : "");
         etAdminNote.setText(info.getAdminNote() != null ? info.getAdminNote() : "");
 
-        // 권한 처리: 학생은 사유만 수정 가능
+        // 학생 권한: 회색으로 통일
         boolean isAdmin = "ROLE_ADMIN".equals(userRole);
-        tvInTime.setEnabled(false); // 학생은 시간 수정 불가
-        tvOutTime.setEnabled(false);
+        tvInTime.setEnabled(false); tvInTime.setTextColor(COLOR_DISABLED);
+        tvOutTime.setEnabled(false); tvOutTime.setTextColor(COLOR_DISABLED);
         spStatus.setEnabled(false);
         spApproval.setEnabled(false);
         spOfficial.setEnabled(false);
-        etAdminNote.setEnabled(false);
-        etMemNote.setEnabled(true); // 학생은 사유 수정 가능
+        etAdminNote.setEnabled(false); etAdminNote.setTextColor(COLOR_DISABLED);
+        tvType.setTextColor(COLOR_DISABLED);
+        tvDate.setTextColor(COLOR_DISABLED); // 날짜 색상도 통일
+
+        etMemNote.setEnabled(true);
+        etMemNote.setTextColor(Color.BLACK);
 
         btnSave.setOnClickListener(view -> {
             String newNote = etMemNote.getText().toString();
-            Map<String, String> req = new HashMap<>();
-            req.put("memNote", newNote);
+            Map<String, String> requestData = new HashMap<>();
+            requestData.put("memNote", newNote);
 
-            apiService.updateMemberNote(info.getAinfoId(), req).enqueue(new Callback<Object>() {
+            apiService.updateMemberNote(info.getAinfoId(), requestData).enqueue(new Callback<Object>() {
                 @Override
                 public void onResponse(Call<Object> call, Response<Object> response) {
                     if (response.isSuccessful()) {

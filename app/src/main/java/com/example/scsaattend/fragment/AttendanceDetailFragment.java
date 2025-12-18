@@ -197,7 +197,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         CalculateStatusRequest request = new CalculateStatusRequest(aInfoIdList);
         apiService.calculateAttendanceStatus(request).enqueue(new Callback<StatusResponse>() {
             @Override
-            public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
+            public void onResponse(@NonNull Call<StatusResponse> call, @NonNull Response<StatusResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Toast.makeText(getContext(), response.body().getMessage(), Toast.LENGTH_LONG).show();
                     searchAttendanceData();
@@ -205,7 +205,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
                 exitSelectionMode();
             }
             @Override
-            public void onFailure(Call<StatusResponse> call, Throwable t) { exitSelectionMode(); }
+            public void onFailure(@NonNull Call<StatusResponse> call, @NonNull Throwable t) { exitSelectionMode(); }
         });
     }
 
@@ -277,7 +277,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         SearchAttendanceRequest request = new SearchAttendanceRequest(startDate, endDate, selectedMemberIds);
         apiService.searchAttendance(request).enqueue(new Callback<List<AttendanceInfoResponse>>() {
             @Override
-            public void onResponse(Call<List<AttendanceInfoResponse>> call, Response<List<AttendanceInfoResponse>> response) {
+            public void onResponse(@NonNull Call<List<AttendanceInfoResponse>> call, @NonNull Response<List<AttendanceInfoResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     List<AttendanceInfoResponse> responseData = response.body();
                     Collections.sort(responseData, Comparator.comparing(AttendanceInfoResponse::getADate).thenComparing(res -> res.getMember().getId()));
@@ -295,7 +295,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
                 }
             }
             @Override
-            public void onFailure(Call<List<AttendanceInfoResponse>> call, Throwable t) {}
+            public void onFailure(@NonNull Call<List<AttendanceInfoResponse>> call, @NonNull Throwable t) {}
         });
     }
 
@@ -320,7 +320,13 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
 
         tvTitle.setText(item.name + "님 출결 수정");
         tvDate.setText("날짜 : " + item.fullDate);
-        tvType.setText("유형 : " + (item.atype != null ? item.atype.getName() : "-"));
+        
+        // 유형 이름 옆에 시간 정보 추가 (학생 모드와 동일)
+        String typeInfo = "-";
+        if (item.atype != null) {
+            typeInfo = item.atype.getName() + " (" + formatShortTime(item.atype.getStartTime()) + " ~ " + formatShortTime(item.atype.getEndTime()) + ")";
+        }
+        tvType.setText("유형 : " + typeInfo);
 
         tvInTime.setText(formatLongTime(item.checkIn));
         tvOutTime.setText(formatLongTime(item.checkOut));
@@ -333,7 +339,6 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
         etAdminNote.setText(item.adminNote != null ? item.adminNote : "");
 
         boolean isAdmin = "ROLE_ADMIN".equals(userRole);
-        
         tvInTime.setEnabled(isAdmin);
         tvOutTime.setEnabled(isAdmin);
         spStatus.setEnabled(isAdmin);
@@ -515,6 +520,11 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
     public void onAttendanceTypeSelected(long typeId, String typeName) {
         Map<String, Object> updateData = new HashMap<>();
         updateData.put("aTypeId", typeId);
+        updateData.put("arrivalTime", null);
+        updateData.put("leavingTime", null);
+        updateData.put("status", null);
+        updateData.put("isApproved", null);
+        updateData.put("isOfficial", null);
         onUpdate(updateData);
     }
     
@@ -665,7 +675,7 @@ public class AttendanceDetailFragment extends Fragment implements UserSelectionD
                     tvStatus.setText(koreanStatus);
                     
                     if ("기록 없음".equals(koreanStatus)) {
-                        tvStatus.setTextColor(Color.GRAY);
+                        tvStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.gray_text));
                     } else {
                         tvStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), 
                             "normal".equals(item.status) ? R.color.status_text_normal : 
