@@ -48,7 +48,6 @@ public class AttendanceTypeManagementFragment extends Fragment {
     private TextView tvTypeCount;
     private ApiService apiService;
 
-    // 시간 저장을 위한 멤버 변수
     private String earliestTime, startTime, endTime, latestTime;
 
     @Override
@@ -69,9 +68,7 @@ public class AttendanceTypeManagementFragment extends Fragment {
         recyclerView.setAdapter(adapter);
 
         apiService = RetrofitClient.getClient().create(ApiService.class);
-
         btnAddType.setOnClickListener(v -> showAddTypeDialog());
-
         fetchAttendanceTypes();
     }
 
@@ -88,22 +85,16 @@ public class AttendanceTypeManagementFragment extends Fragment {
                     typeList.addAll(response.body());
                     adapter.notifyDataSetChanged();
                     updateTypeCount();
-                } else {
-                    Toast.makeText(getContext(), "유형 목록을 불러오지 못했습니다.", Toast.LENGTH_SHORT).show();
                 }
             }
-
             @Override
-            public void onFailure(Call<List<AttendanceTypeResponse>> call, Throwable t) {
-                Toast.makeText(getContext(), "서버와 통신할 수 없습니다.", Toast.LENGTH_SHORT).show();
-            }
+            public void onFailure(Call<List<AttendanceTypeResponse>> call, Throwable t) {}
         });
     }
 
     private void showAddTypeDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        LayoutInflater inflater = requireActivity().getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.dialog_add_attendance_type, null);
+        View dialogView = requireActivity().getLayoutInflater().inflate(R.layout.dialog_add_attendance_type, null);
         builder.setView(dialogView);
 
         final EditText etTypeName = dialogView.findViewById(R.id.et_type_name);
@@ -111,98 +102,59 @@ public class AttendanceTypeManagementFragment extends Fragment {
         final TextView tvStartTime = dialogView.findViewById(R.id.tv_start_time);
         final TextView tvEndTime = dialogView.findViewById(R.id.tv_end_time);
         final TextView tvLatestTime = dialogView.findViewById(R.id.tv_latest_time);
-        Button btnCancel = dialogView.findViewById(R.id.btn_cancel_add);
-        Button btnConfirm = dialogView.findViewById(R.id.btn_confirm_add);
 
-        // 시간 변수 및 TextView 초기화
-        earliestTime = "08:00:00";
-        startTime = "09:00:00";
-        endTime = "18:00:00";
-        latestTime = "19:00:00";
-
-        tvEarliestTime.setText(earliestTime);
-        tvStartTime.setText(startTime);
-        tvEndTime.setText(endTime);
-        tvLatestTime.setText(latestTime);
+        earliestTime = "08:00:00"; startTime = "09:00:00"; endTime = "18:00:00"; latestTime = "19:00:00";
+        tvEarliestTime.setText(earliestTime); tvStartTime.setText(startTime); tvEndTime.setText(endTime); tvLatestTime.setText(latestTime);
 
         tvEarliestTime.setOnClickListener(v -> showCustomTimePicker(8, 0, 0, time -> {
-            earliestTime = time;
-            tvEarliestTime.setText(earliestTime);
+            earliestTime = time; tvEarliestTime.setText(earliestTime);
         }));
         tvStartTime.setOnClickListener(v -> showCustomTimePicker(9, 0, 0, time -> {
-            startTime = time;
-            tvStartTime.setText(startTime);
+            startTime = time; tvStartTime.setText(startTime);
         }));
         tvEndTime.setOnClickListener(v -> showCustomTimePicker(18, 0, 0, time -> {
-            endTime = time;
-            tvEndTime.setText(endTime);
+            endTime = time; tvEndTime.setText(endTime);
         }));
         tvLatestTime.setOnClickListener(v -> showCustomTimePicker(19, 0, 0, time -> {
-            latestTime = time;
-            tvLatestTime.setText(latestTime);
+            latestTime = time; tvLatestTime.setText(latestTime);
         }));
 
         AlertDialog dialog = builder.create();
-
-        btnCancel.setOnClickListener(v -> dialog.dismiss());
-        btnConfirm.setOnClickListener(v -> {
+        dialogView.findViewById(R.id.btn_cancel_add).setOnClickListener(v -> dialog.dismiss());
+        dialogView.findViewById(R.id.btn_confirm_add).setOnClickListener(v -> {
             String name = etTypeName.getText().toString();
-
-            if (name.isEmpty()) {
-                Toast.makeText(getContext(), "유형 이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            AttendanceTypeRequest request = new AttendanceTypeRequest(name, earliestTime, startTime, endTime, latestTime);
-            addAttendanceType(request);
+            if (name.isEmpty()) { Toast.makeText(getContext(), "유형 이름을 입력해주세요.", Toast.LENGTH_SHORT).show(); return; }
+            addAttendanceType(new AttendanceTypeRequest(name, earliestTime, startTime, endTime, latestTime));
             dialog.dismiss();
         });
-
         dialog.show();
     }
 
-    private void showCustomTimePicker(int defaultHour, int defaultMinute, int defaultSecond, OnTimeSelectedListener listener) {
+    private void showCustomTimePicker(int h, int m, int s, OnTimeSelectedListener listener) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        LayoutInflater inflater = requireActivity().getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.dialog_custom_time_picker, null);
-        builder.setView(dialogView);
+        View v = requireActivity().getLayoutInflater().inflate(R.layout.dialog_custom_time_picker, null);
+        builder.setView(v);
 
-        NumberPicker hourPicker = dialogView.findViewById(R.id.picker_hour);
-        NumberPicker minutePicker = dialogView.findViewById(R.id.picker_minute);
-        NumberPicker secondPicker = dialogView.findViewById(R.id.picker_second);
+        NumberPicker hp = v.findViewById(R.id.picker_hour), mp = v.findViewById(R.id.picker_minute), sp = v.findViewById(R.id.picker_second);
+        View cbClear = v.findViewById(R.id.cb_clear_time); // 체크박스 참조
 
-        NumberPicker.Formatter formatter = value -> String.format(Locale.getDefault(), "%02d", value);
+        // 유형 추가 시에는 체크박스를 숨김
+        if (cbClear != null) cbClear.setVisibility(View.GONE);
 
-        hourPicker.setMinValue(0);
-        hourPicker.setMaxValue(23);
-        hourPicker.setFormatter(formatter);
-        hourPicker.setWrapSelectorWheel(false); // 시간 순환 방지
-
-        minutePicker.setMinValue(0);
-        minutePicker.setMaxValue(59);
-        minutePicker.setFormatter(formatter);
-
-        secondPicker.setMinValue(0);
-        secondPicker.setMaxValue(59);
-        secondPicker.setFormatter(formatter);
-
-        hourPicker.setValue(defaultHour);
-        minutePicker.setValue(defaultMinute);
-        secondPicker.setValue(defaultSecond);
+        NumberPicker.Formatter fmt = value -> String.format(Locale.getDefault(), "%02d", value);
+        hp.setMinValue(0); hp.setMaxValue(23); hp.setFormatter(fmt); hp.setValue(h);
+        mp.setMinValue(0); mp.setMaxValue(59); mp.setFormatter(fmt); mp.setValue(m);
+        sp.setMinValue(0); sp.setMaxValue(59); sp.setFormatter(fmt); sp.setValue(s);
 
         builder.setTitle("시간 선택");
         builder.setPositiveButton("확인", (dialog, which) -> {
-            String formattedTime = String.format(Locale.getDefault(), "%02d:%02d:%02d", hourPicker.getValue(), minutePicker.getValue(), secondPicker.getValue());
-            listener.onTimeSelected(formattedTime);
+            listener.onTimeSelected(String.format(Locale.getDefault(), "%02d:%02d:%02d", hp.getValue(), mp.getValue(), sp.getValue()));
         });
         builder.setNegativeButton("취소", (dialog, which) -> dialog.cancel());
-
-        builder.create().show();
+        builder.show();
     }
 
-    interface OnTimeSelectedListener {
-        void onTimeSelected(String time);
-    }
+    interface OnTimeSelectedListener { void onTimeSelected(String time); }
 
     private void addAttendanceType(AttendanceTypeRequest request) {
         apiService.addAttendanceType(request).enqueue(new Callback<AttendanceTypeResponse>() {
@@ -212,23 +164,11 @@ public class AttendanceTypeManagementFragment extends Fragment {
                     typeList.add(response.body());
                     adapter.notifyItemInserted(typeList.size() - 1);
                     updateTypeCount();
-                    Toast.makeText(getContext(), "새로운 출결 유형이 추가되었습니다.", Toast.LENGTH_SHORT).show();
-                } else {
-                    try {
-                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "{\"message\": \"알 수 없는 오류\"}";
-                        JSONObject jsonObject = new JSONObject(errorBody);
-                        String errorMessage = jsonObject.getString("message");
-                        Toast.makeText(getContext(), "추가 실패: " + errorMessage, Toast.LENGTH_LONG).show();
-                    } catch (IOException | JSONException e) {
-                        Toast.makeText(getContext(), "오류 메시지를 파싱하는 데 실패했습니다.", Toast.LENGTH_SHORT).show();
-                    }
+                    Toast.makeText(getContext(), "추가되었습니다.", Toast.LENGTH_SHORT).show();
                 }
             }
-
             @Override
-            public void onFailure(Call<AttendanceTypeResponse> call, Throwable t) {
-                Toast.makeText(getContext(), "서버와 통신할 수 없습니다.", Toast.LENGTH_SHORT).show();
-            }
+            public void onFailure(Call<AttendanceTypeResponse> call, Throwable t) {}
         });
     }
 
@@ -236,94 +176,57 @@ public class AttendanceTypeManagementFragment extends Fragment {
         apiService.deleteAttendanceType(typeId).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                try {
-                    String responseBody = "";
-                    if (response.isSuccessful() && response.body() != null) {
-                        responseBody = response.body().string();
-                        typeList.remove(position);
-                        adapter.notifyItemRemoved(position);
-                        adapter.notifyItemRangeChanged(position, typeList.size());
-                        updateTypeCount();
-                    } else if (response.errorBody() != null) {
-                        responseBody = response.errorBody().string();
-                    } else {
-                        Toast.makeText(getContext(), "알 수 없는 오류가 발생했습니다.", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    JSONObject jsonObject = new JSONObject(responseBody);
-                    String message = jsonObject.getString("message");
-                    Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
-
-                } catch (IOException | JSONException e) {
-                    Toast.makeText(getContext(), "응답을 처리하는 데 실패했습니다.", Toast.LENGTH_SHORT).show();
+                if (response.isSuccessful()) {
+                    typeList.remove(position);
+                    adapter.notifyItemRemoved(position);
+                    updateTypeCount();
+                    Toast.makeText(getContext(), "삭제되었습니다.", Toast.LENGTH_SHORT).show();
                 }
             }
-
             @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                Toast.makeText(getContext(), "서버와 통신할 수 없습니다.", Toast.LENGTH_SHORT).show();
-            }
+            public void onFailure(Call<ResponseBody> call, Throwable t) {}
         });
     }
 
-
     private class TypeAdapter extends RecyclerView.Adapter<TypeAdapter.ViewHolder> {
         private final List<AttendanceTypeResponse> types;
-
-        public TypeAdapter(List<AttendanceTypeResponse> types) {
-            this.types = types;
-        }
+        public TypeAdapter(List<AttendanceTypeResponse> types) { this.types = types; }
 
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_attendance_type, parent, false);
-            return new ViewHolder(view);
+            return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_attendance_type, parent, false));
         }
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             AttendanceTypeResponse item = types.get(position);
             holder.tvTypeName.setText(item.getName());
-
-            String startWork = item.getEarliestTime() != null && item.getEarliestTime().length() >= 5 ? item.getEarliestTime().substring(0, 5) : item.getEarliestTime();
-            String startClass = item.getStartTime() != null && item.getStartTime().length() >= 5 ? item.getStartTime().substring(0, 5) : item.getStartTime();
-            String endClass = item.getEndTime() != null && item.getEndTime().length() >= 5 ? item.getEndTime().substring(0, 5) : item.getEndTime();
-            String endWork = item.getLatestTime() != null && item.getLatestTime().length() >= 5 ? item.getLatestTime().substring(0, 5) : item.getLatestTime();
-
-            holder.tvStartWork.setText(startWork);
-            holder.tvStartClass.setText(startClass);
-            holder.tvEndClass.setText(endClass);
-            holder.tvEndWork.setText(endWork);
+            holder.tvStartWork.setText(format(item.getEarliestTime()));
+            holder.tvStartClass.setText(format(item.getStartTime()));
+            holder.tvEndClass.setText(format(item.getEndTime()));
+            holder.tvEndWork.setText(format(item.getLatestTime()));
 
             if ("기본".equals(item.getName())) {
                 holder.btnDeleteType.setVisibility(View.INVISIBLE);
-                holder.btnDeleteType.setOnClickListener(null);
             } else {
                 holder.btnDeleteType.setVisibility(View.VISIBLE);
                 holder.btnDeleteType.setOnClickListener(v -> {
-                    new AlertDialog.Builder(getContext())
-                            .setTitle("출결 유형 삭제")
-                            .setMessage("해당 출결 유형 삭제 시 관련된 출결 정보는 '기본' 유형으로 변경됩니다. 그래도 삭제하시겠습니까?")
-                            .setPositiveButton("삭제", (dialog, which) -> {
-                                deleteAttendanceType(item.getId(), holder.getAdapterPosition());
-                            })
-                            .setNegativeButton("취소", null)
-                            .show();
+                    new AlertDialog.Builder(getContext()).setTitle("삭제 확인").setMessage("삭제하시겠습니까?")
+                            .setPositiveButton("삭제", (d, w) -> deleteAttendanceType(item.getId(), holder.getAdapterPosition()))
+                            .setNegativeButton("취소", null).show();
                 });
             }
         }
 
+        private String format(String t) { return (t != null && t.length() >= 5) ? t.substring(0, 5) : t; }
+
         @Override
-        public int getItemCount() {
-            return types.size();
-        }
+        public int getItemCount() { return types.size(); }
 
         class ViewHolder extends RecyclerView.ViewHolder {
             TextView tvTypeName, tvStartWork, tvStartClass, tvEndClass, tvEndWork;
-            View btnDeleteType; // ImageButton
-
+            View btnDeleteType;
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
                 tvTypeName = itemView.findViewById(R.id.tv_type_name);
